@@ -32,11 +32,15 @@ assign workout plans, and track progress. Clients log workouts and measurements.
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.profiles (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email text NOT NULL,
   role text NOT NULL DEFAULT 'client' CHECK (role IN ('trainer', 'client')),
   full_name text NOT NULL DEFAULT '',
   avatar_url text,
   phone text,
   bio text,
+  location text,
+  specialization text,
+  onboarding_completed boolean DEFAULT false,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -590,8 +594,8 @@ CREATE TRIGGER workout_plans_updated_at BEFORE UPDATE ON public.workout_plans
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, role, full_name)
-  VALUES (NEW.id, 'client', COALESCE(NEW.raw_user_meta_data->>'full_name', ''));
+  INSERT INTO public.profiles (id, email, role, full_name)
+  VALUES (NEW.id, NEW.email, 'client', COALESCE(NEW.raw_user_meta_data->>'full_name', ''));
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
