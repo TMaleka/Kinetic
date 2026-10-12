@@ -42,10 +42,7 @@ function ProtectedRoutes() {
 
   // Check if client needs onboarding
   const needsOnboarding = !profile.onboarding_completed
-
-  // For testing: set to true to force onboarding for all clients
-  const forceOnboarding = false 
-  const showOnboarding = forceOnboarding || needsOnboarding
+  const showOnboarding = needsOnboarding
 
   return (
     <ClientLayout>

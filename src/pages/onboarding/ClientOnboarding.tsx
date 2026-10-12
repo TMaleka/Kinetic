@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { ChevronRight, ChevronLeft, Target, Scale, Activity, Check, Edit } from 'lucide-react'
+import { ChevronRight, ChevronLeft, Target, Scale, Activity } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
-type Step = 'goal' | 'starting' | 'target' | 'review'
+type Step = 'goal' | 'starting' | 'target'
 
 export function ClientOnboarding() {
   const { profile } = useAuth()
@@ -16,35 +16,25 @@ export function ClientOnboarding() {
   const [startingWeight, setStartingWeight] = useState('')
   const [targetWeight, setTargetWeight] = useState('')
   const [timeline, setTimeline] = useState('')
-  const [trainerFeedback, setTrainerFeedback] = useState('')
-  const [goalStatus, setGoalStatus] = useState<'pending' | 'confirmed' | 'adjusted'>('pending')
-  const [mockSubmitted, setMockSubmitted] = useState(false)
 
   const handleNext = () => {
     if (step === 'goal') setStep('starting')
     else if (step === 'starting') setStep('target')
-    else if (step === 'target') setStep('review')
   }
 
   const handleBack = () => {
     if (step === 'target') setStep('starting')
     else if (step === 'starting') setStep('goal')
-    else if (step === 'review') setStep('target')
   }
 
   const handleSubmit = async () => {
     setLoading(true)
     // TODO: Save onboarding data to database and mark onboarding as complete
-    // For testing: simulate trainer review process
+    // For now, mark onboarding as complete and navigate to app
     setTimeout(() => {
-      setGoalStatus('confirmed')
-      setMockSubmitted(true)
       setLoading(false)
-    }, 1500)
-  }
-
-  const handleStartTraining = () => {
-    navigate('/app')
+      navigate('/app')
+    }, 1000)
   }
 
   const renderStep = () => {
@@ -197,89 +187,9 @@ export function ClientOnboarding() {
               
               <div className="rounded-xl bg-[#f8f8f4] p-4">
                 <p className="text-sm text-[#6b756a]">
-                  Your trainer will review these targets and may adjust them based on their program recommendations.
+                  You can update these targets later. Once you connect with a trainer, they can review and adjust these goals based on their expertise.
                 </p>
               </div>
-            </div>
-          </div>
-        )
-
-      case 'review':
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="grid size-16 place-items-center rounded-full bg-[#edf3d5] text-[#718b33] mx-auto mb-4">
-                <Check className="size-8" />
-              </div>
-              <h2 className="font-display text-2xl font-semibold text-[#25342d]">Trainer review</h2>
-              <p className="mt-2 text-sm text-[#7c857c]">Your trainer will confirm or adjust your goal</p>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="rounded-xl border border-[#edf0e8] p-4">
-                <h3 className="font-semibold text-[#25342d] mb-3">Your request</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-[#969f96]">Goal:</span>
-                    <span className="font-medium">{goal}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#969f96]">Starting weight:</span>
-                    <span className="font-medium">{startingWeight} kg</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#969f96]">Target weight:</span>
-                    <span className="font-medium">{targetWeight} kg</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#969f96]">Timeline:</span>
-                    <span className="font-medium">{timeline}</span>
-                  </div>
-                </div>
-              </div>
-              
-              {goalStatus === 'pending' && (
-                <div className="rounded-xl bg-[#f7eadb] p-4">
-                  <p className="text-sm text-[#ad784b]">
-                    Your goal has been submitted for trainer review. You'll be notified once your trainer has reviewed it.
-                  </p>
-                </div>
-              )}
-              
-              {goalStatus === 'confirmed' && (
-                <div className="rounded-xl bg-[#edf3d5] p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Check className="size-4 text-[#718b33]" />
-                    <span className="font-semibold text-[#718b33]">Goal confirmed</span>
-                  </div>
-                  <p className="text-sm text-[#718b33]">
-                    Your trainer has confirmed your goal. You can now start your training program.
-                  </p>
-                </div>
-              )}
-              
-              {goalStatus === 'adjusted' && (
-                <div className="rounded-xl bg-[#eee8f3] p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Edit className="size-4 text-[#6b5a7a]" />
-                    <span className="font-semibold text-[#6b5a7a]">Goal adjusted</span>
-                  </div>
-                  <p className="text-sm text-[#6b5a7a] mb-3">
-                    Your trainer has adjusted your goal based on their program recommendations.
-                  </p>
-                  <div className="rounded-lg bg-white p-3">
-                    <p className="text-sm font-medium text-[#25342d]">{trainerFeedback}</p>
-                  </div>
-                </div>
-              )}
-              
-              <button
-                onClick={goalStatus === 'confirmed' || goalStatus === 'adjusted' ? handleStartTraining : handleSubmit}
-                disabled={loading || goalStatus === 'pending'}
-                className="btn-primary w-full py-3"
-              >
-                {loading ? 'Submitting...' : goalStatus === 'confirmed' || goalStatus === 'adjusted' ? 'Start Training' : 'Submit for Review'}
-              </button>
             </div>
           </div>
         )
@@ -294,7 +204,6 @@ export function ClientOnboarding() {
       case 'goal': return 1
       case 'starting': return 2
       case 'target': return 3
-      case 'review': return 4
       default: return 1
     }
   }
@@ -305,9 +214,9 @@ export function ClientOnboarding() {
         {/* Progress indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-[#93a84e]">Step {getStepNumber()} of 4</span>
+            <span className="text-xs font-semibold text-[#93a84e]">Step {getStepNumber()} of 3</span>
             <div className="flex gap-1">
-              {[1, 2, 3, 4].map((i) => (
+              {[1, 2, 3].map((i) => (
                 <div
                   key={i}
                   className={`h-1.5 w-8 rounded-full transition ${
@@ -325,27 +234,25 @@ export function ClientOnboarding() {
         </div>
 
         {/* Navigation buttons */}
-        {step !== 'review' && (
-          <div className="mt-6 flex gap-3">
-            {step !== 'goal' && (
-              <button
-                onClick={handleBack}
-                className="btn-secondary flex-1 py-3 flex items-center justify-center gap-2"
-              >
-                <ChevronLeft className="size-4" />
-                Back
-              </button>
-            )}
+        <div className="mt-6 flex gap-3">
+          {step !== 'goal' && (
             <button
-              onClick={handleNext}
-              disabled={step === 'goal' && !goal || step === 'starting' && !startingWeight || step === 'target' && !targetWeight}
-              className="btn-primary flex-1 py-3 flex items-center justify-center gap-2"
+              onClick={handleBack}
+              className="btn-secondary flex-1 py-3 flex items-center justify-center gap-2"
             >
-              {step === 'target' ? 'Review' : 'Next'}
-              <ChevronRight className="size-4" />
+              <ChevronLeft className="size-4" />
+              Back
             </button>
-          </div>
-        )}
+          )}
+          <button
+            onClick={step === 'target' ? handleSubmit : handleNext}
+            disabled={loading || (step === 'goal' && !goal) || (step === 'starting' && !startingWeight) || (step === 'target' && !targetWeight)}
+            className="btn-primary flex-1 py-3 flex items-center justify-center gap-2"
+          >
+            {loading ? 'Completing...' : step === 'target' ? 'Complete Onboarding' : 'Next'}
+            {step !== 'target' && <ChevronRight className="size-4" />}
+          </button>
+        </div>
       </div>
     </div>
   )

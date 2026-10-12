@@ -34,9 +34,9 @@ export function ClientDashboard() {
   const [latestWeight, setLatestWeight] = useState<any>(null)
   const [weightChange, setWeightChange] = useState<number | null>(null)
   const [goal, setGoal] = useState<string | null>(null)
+  const [hasTrainer, setHasTrainer] = useState(false)
   const [error, setError] = useState('')
   const [useMockData] = useState(false) // Set to false for production
-  const [needsOnboarding] = useState(false) // Set to true to test onboarding
 
   useEffect(() => {
     if (profile) loadData()
@@ -145,14 +145,15 @@ export function ClientDashboard() {
         }
       }
 
-      // Goals
+      // Goals and trainer connection
       const { data: linkGoals } = await supabase
         .from('trainer_client_links')
-        .select('goals')
+        .select('goals, trainer_id')
         .eq('client_id', profile.id)
         .eq('status', 'active')
         .maybeSingle()
       setGoal(linkGoals?.goals || null)
+      setHasTrainer(!!linkGoals?.trainer_id)
     } catch (err) {
       console.error(err)
       setError('Failed to load dashboard data. Please refresh the page.')
@@ -246,6 +247,20 @@ export function ClientDashboard() {
         <StatCard label="Current streak" value={`${streak} days`} detail="Personal best" icon={Flame} accent="peach" />
         <StatCard label="Workouts" value={`${weekCount}`} detail="This week" icon={Dumbbell} accent="lavender" />
       </div>
+
+      {!hasTrainer && (
+        <section className="card p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-xl font-semibold text-[#25342d]">Connect with a trainer</h2>
+              <p className="mt-1 text-xs text-[#929990]">Get personalized workout plans and expert guidance</p>
+            </div>
+            <button className="rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white">
+              Find a Trainer
+            </button>
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
         <section className="card p-6">
