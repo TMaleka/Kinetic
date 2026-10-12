@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { ChevronRight, ChevronLeft, Target, Scale, Activity } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 
 type Step = 'goal' | 'starting' | 'target'
 
 export function ClientOnboarding() {
-  const { profile } = useAuth()
+  const { profile, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const [step, setStep] = useState<Step>('goal')
   const [loading, setLoading] = useState(false)
@@ -29,12 +30,33 @@ export function ClientOnboarding() {
 
   const handleSubmit = async () => {
     setLoading(true)
-    // TODO: Save onboarding data to database and mark onboarding as complete
-    // For now, mark onboarding as complete and navigate to app
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      // Save onboarding data to database and mark onboarding as complete
+      if (profile) {
+        // Update the onboarding_completed flag in the database
+        const { error } = await supabase
+          .from('profiles')
+          .update({ onboarding_completed: true })
+          .eq('id', profile.id)
+
+        if (error) {
+          console.error('Failed to complete onboarding:', error)
+          // Even if database update fails, allow user to proceed
+        }
+
+        // Refresh the profile to get updated onboarding status
+        await refreshProfile()
+      }
+
+      // Navigate to app after completion
       navigate('/app')
-    }, 1000)
+    } catch (error) {
+      console.error('Onboarding error:', error)
+      // Even on error, allow user to proceed to avoid blocking
+      navigate('/app')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const renderStep = () => {

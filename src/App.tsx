@@ -42,7 +42,10 @@ function ProtectedRoutes() {
 
   // Check if client needs onboarding
   const needsOnboarding = !profile.onboarding_completed
-  const showOnboarding = needsOnboarding
+
+  // Temporary: bypass onboarding for testing (remove this in production)
+  const bypassOnboarding = false
+  const showOnboarding = needsOnboarding && !bypassOnboarding
 
   return (
     <ClientLayout>
