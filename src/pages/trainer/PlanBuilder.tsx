@@ -50,7 +50,7 @@ export function PlanBuilder() {
   const [showExercisePicker, setShowExercisePicker] = useState<number | null>(null)
   const [clients, setClients] = useState<any[]>([])
   const [selectedClient, setSelectedClient] = useState<string | null>(null)
-  const [scheduleSessions, setScheduleSessions] = useState(false)
+  const [scheduleSessions, setScheduleSessions] = useState(true) // Auto-schedule by default
   const [startDate, setStartDate] = useState(todayISO())
 
   useEffect(() => {
@@ -236,8 +236,8 @@ export function PlanBuilder() {
         }
       }
 
-      // Schedule sessions if client is selected and option is enabled
-      if (selectedClient && scheduleSessions && currentPlanId) {
+      // Schedule sessions if client is selected (required for client to see workouts)
+      if (selectedClient && currentPlanId) {
         await scheduleSessionsFromPlan(currentPlanId, selectedClient, profile.id, startDate)
       }
 
@@ -333,7 +333,7 @@ export function PlanBuilder() {
                     />
                     <label htmlFor="scheduleSessions" className="text-sm text-[#3d4b40] flex items-center gap-2">
                       <Calendar size={16} />
-                      Schedule sessions automatically
+                      Schedule sessions automatically (recommended)
                     </label>
                   </div>
                   {scheduleSessions && (
