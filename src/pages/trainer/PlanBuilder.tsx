@@ -238,7 +238,11 @@ export function PlanBuilder() {
 
       // Schedule sessions if client is selected (required for client to see workouts)
       if (selectedClient && currentPlanId) {
-        await scheduleSessionsFromPlan(currentPlanId, selectedClient, profile.id, startDate)
+        const result = await scheduleSessionsFromPlan(currentPlanId, selectedClient, profile.id, startDate)
+        console.log('Session scheduling result:', result)
+        if (!result.success) {
+          console.error('Failed to schedule sessions:', result.message)
+        }
       }
 
       navigate('/trainer/plans')

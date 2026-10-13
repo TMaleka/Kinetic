@@ -76,6 +76,7 @@ export function ClientDashboard() {
         .eq('scheduled_date', today)
         .order('created_at', { ascending: false })
         .maybeSingle()
+      console.log('Today session query result:', todayData)
       setTodaySession(todayData)
 
       // Calculate streak from completed sessions
@@ -255,7 +256,7 @@ export function ClientDashboard() {
               <h2 className="font-display text-xl font-semibold text-[#25342d]">Connect with a trainer</h2>
               <p className="mt-1 text-xs text-[#929990]">Get personalized workout plans and expert guidance</p>
             </div>
-            <button className="rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white">
+            <button onClick={() => alert('Trainer search feature coming soon! For now, ask your trainer to send you an invitation.')} className="rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white hover:bg-[#3d4b40] transition">
               Find a Trainer
             </button>
           </div>
@@ -269,7 +270,7 @@ export function ClientDashboard() {
               <h2 className="font-display text-xl font-semibold text-[#25342d]">Progress overview</h2>
               <p className="mt-1 text-xs text-[#929990]">Last 8 weeks</p>
             </div>
-            <button className="rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a]">8 weeks⌄</button>
+            <button onClick={() => alert('Time range selector coming soon! Currently showing 8 weeks.')} className="rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a] hover:bg-[#f8f8f4] transition">8 weeks⌄</button>
           </div>
           <div className="mt-8 flex h-44 items-end gap-3 border-b border-[#eceee5] px-2">
             {[38, 48, 43, 65, 58, 72, 68, 83, 78, 92].map((v, i) => (

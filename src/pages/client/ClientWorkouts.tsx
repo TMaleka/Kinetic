@@ -111,7 +111,8 @@ export function ClientWorkouts() {
         .eq('client_id', profile.id)
         .gte('scheduled_date', toLocalISO(startOfWeek))
         .order('scheduled_date', { ascending: true })
-      
+
+      console.log('Client sessions query result:', data)
       setSessions(data || [])
       
       // Build week data

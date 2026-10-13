@@ -221,7 +221,7 @@ export function ClientProgress() {
               <h2 className="font-display text-xl font-semibold text-[#25342d]">Weight progress</h2>
               <p className="mt-1 text-xs text-[#929990]">Last 8 weeks</p>
             </div>
-            <button className="rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a]">8 weeks⌄</button>
+            <button onClick={() => alert('Time range selector coming soon! Currently showing 8 weeks.')} className="rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a] hover:bg-[#f8f8f4] transition">8 weeks⌄</button>
           </div>
           <div className="mt-8 flex h-44 items-end gap-3 border-b border-[#eceee5] px-2">
             {measurements.slice(-10).map((m, i) => {
