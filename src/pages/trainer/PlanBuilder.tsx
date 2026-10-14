@@ -164,6 +164,10 @@ export function PlanBuilder() {
 
   const handleSave = async () => {
     if (!profile || !title.trim()) return
+    if (days.length === 0) {
+      alert('Please add at least one day to your workout plan')
+      return
+    }
     setSaving(true)
     try {
       let currentPlanId = planId
@@ -206,6 +210,7 @@ export function PlanBuilder() {
       }
 
       // Insert days and exercises
+      const insertedDayIds: string[] = []
       for (const day of days) {
         const { data: newDay } = await supabase
           .from('plan_days')
@@ -219,6 +224,8 @@ export function PlanBuilder() {
           .maybeSingle()
 
         if (!newDay) continue
+
+        insertedDayIds.push(newDay.id)
 
         if (day.exercises.length > 0) {
           await supabase.from('plan_exercises').insert(
@@ -236,18 +243,25 @@ export function PlanBuilder() {
         }
       }
 
+      console.log(`Inserted ${insertedDayIds.length} days for plan ${currentPlanId}`)
+
       // Schedule sessions if client is selected (required for client to see workouts)
-      if (selectedClient && currentPlanId) {
+      if (selectedClient && currentPlanId && insertedDayIds.length > 0) {
+        // Small delay to ensure database consistency
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         const result = await scheduleSessionsFromPlan(currentPlanId, selectedClient, profile.id, startDate)
         console.log('Session scheduling result:', result)
         if (!result.success) {
           console.error('Failed to schedule sessions:', result.message)
+          alert(`Warning: Sessions could not be scheduled automatically. Error: ${result.message}`)
         }
       }
 
       navigate('/trainer/plans')
     } catch (err) {
-      console.error(err)
+      console.error('Error saving plan:', err)
+      alert('Failed to save workout plan. Please try again.')
     } finally {
       setSaving(false)
     }
