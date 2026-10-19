@@ -43,8 +43,9 @@ export function TrainerProfile() {
       })
       await refreshProfile()
       setEditing(false)
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
+      alert(`Failed to save profile: ${err?.message || 'Unknown error'}`)
     } finally {
       setSaving(false)
     }
@@ -75,7 +76,14 @@ export function TrainerProfile() {
           </div>
           {!editing && (
             <button
-              onClick={() => setEditing(true)}
+              onClick={() => {
+                setFullName(profile.full_name || '')
+                setPhone(profile.phone || '')
+                setBio(profile.bio || '')
+                setLocation(profile.location || '')
+                setSpecialization(profile.specialization || '')
+                setEditing(true)
+              }}
               className="flex items-center gap-2 rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a]"
             >
               Edit
@@ -168,7 +176,7 @@ export function TrainerProfile() {
               </div>
               <div className="flex-1">
                 <p className="text-xs text-[#969f96]">Email</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{profile?.email || 'alex@trainer.com'}</p>
+                <p className="text-sm font-semibold text-[#3d4b40]">{profile.email}</p>
               </div>
             </div>
             <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
@@ -177,7 +185,7 @@ export function TrainerProfile() {
               </div>
               <div className="flex-1">
                 <p className="text-xs text-[#969f96]">Phone</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{phone || profile?.phone || 'Not set'}</p>
+                <p className="text-sm font-semibold text-[#3d4b40]">{profile.phone || 'Not set'}</p>
               </div>
             </div>
             <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
@@ -186,7 +194,7 @@ export function TrainerProfile() {
               </div>
               <div className="flex-1">
                 <p className="text-xs text-[#969f96]">Location</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{location || profile?.location || 'Not set'}</p>
+                <p className="text-sm font-semibold text-[#3d4b40]">{profile.location || 'Not set'}</p>
               </div>
             </div>
             <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
@@ -195,7 +203,7 @@ export function TrainerProfile() {
               </div>
               <div className="flex-1">
                 <p className="text-xs text-[#969f96]">Specialization</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{specialization || profile?.specialization || 'Not set'}</p>
+                <p className="text-sm font-semibold text-[#3d4b40]">{profile.specialization || 'Not set'}</p>
               </div>
             </div>
             <div className="flex items-start gap-4 rounded-xl border border-[#edf0e8] p-4">
@@ -204,7 +212,7 @@ export function TrainerProfile() {
               </div>
               <div className="flex-1">
                 <p className="text-xs text-[#969f96]">Bio</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{bio || profile?.bio || 'Not set'}</p>
+                <p className="text-sm font-semibold text-[#3d4b40]">{profile.bio || 'Not set'}</p>
               </div>
             </div>
             <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
@@ -213,7 +221,7 @@ export function TrainerProfile() {
               </div>
               <div className="flex-1">
                 <p className="text-xs text-[#969f96]">Member since</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{profile?.created_at ? formatDate(profile.created_at) : 'January 2024'}</p>
+                <p className="text-sm font-semibold text-[#3d4b40]">{formatDate(profile.created_at)}</p>
               </div>
             </div>
           </div>

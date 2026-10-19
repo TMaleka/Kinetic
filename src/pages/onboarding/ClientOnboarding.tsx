@@ -17,6 +17,11 @@ export function ClientOnboarding() {
   const [startingWeight, setStartingWeight] = useState('')
   const [targetWeight, setTargetWeight] = useState('')
   const [timeline, setTimeline] = useState('')
+  const [height, setHeight] = useState('')
+  const [activityLevel, setActivityLevel] = useState('')
+  const [injuries, setInjuries] = useState('')
+  const [additionalTargets, setAdditionalTargets] = useState('')
+  const [error, setError] = useState('')
 
   const handleNext = () => {
     if (step === 'goal') setStep('starting')
@@ -29,31 +34,41 @@ export function ClientOnboarding() {
   }
 
   const handleSubmit = async () => {
+    if (!profile) return
     setLoading(true)
+    setError('')
     try {
-      // Save onboarding data to database and mark onboarding as complete
-      if (profile) {
-        // Update the onboarding_completed flag in the database
-        const { error } = await supabase
-          .from('profiles')
-          .update({ onboarding_completed: true })
-          .eq('id', profile.id)
+      const { error: goalError } = await supabase.from('client_goals').insert({
+        client_id: profile.id,
+        goal,
+        starting_weight: startingWeight ? parseFloat(startingWeight) : null,
+        target_weight: targetWeight ? parseFloat(targetWeight) : null,
+        timeline: timeline || null,
+        starting_height: height ? parseFloat(height) : null,
+        activity_level: activityLevel || null,
+        injuries: injuries || null,
+        additional_targets: additionalTargets || null,
+      })
+      if (goalError) throw goalError
 
-        if (error) {
-          console.error('Failed to complete onboarding:', error)
-          // Even if database update fails, allow user to proceed
-        }
-
-        // Refresh the profile to get updated onboarding status
-        await refreshProfile()
+      if (startingWeight) {
+        const { error: measurementError } = await supabase
+          .from('measurements')
+          .insert({ client_id: profile.id, body_weight: parseFloat(startingWeight) })
+        if (measurementError) console.error('Failed to save starting weight:', measurementError)
       }
 
-      // Navigate to app after completion
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ onboarding_completed: true })
+        .eq('id', profile.id)
+      if (profileError) throw profileError
+
+      await refreshProfile()
       navigate('/app')
-    } catch (error) {
-      console.error('Onboarding error:', error)
-      // Even on error, allow user to proceed to avoid blocking
-      navigate('/app')
+    } catch (err: any) {
+      console.error('Onboarding error:', err)
+      setError(`Could not save your details: ${err?.message || 'Unknown error'}. Please try again.`)
     } finally {
       setLoading(false)
     }
@@ -129,6 +144,8 @@ export function ClientOnboarding() {
                 <label className="label">Height (cm)</label>
                 <input
                   type="number"
+                  value={height}
+                  onChange={(e) => setHeight(e.target.value)}
                   placeholder="175"
                   className="input"
                 />
@@ -136,7 +153,7 @@ export function ClientOnboarding() {
               
               <div>
                 <label className="label">Current activity level</label>
-                <select className="input">
+                <select value={activityLevel} onChange={(e) => setActivityLevel(e.target.value)} className="input">
                   <option value="">Select activity level</option>
                   <option value="sedentary">Sedentary (little to no exercise)</option>
                   <option value="light">Light (1-3 days/week)</option>
@@ -149,6 +166,8 @@ export function ClientOnboarding() {
               <div>
                 <label className="label">Any injuries or limitations?</label>
                 <textarea
+                  value={injuries}
+                  onChange={(e) => setInjuries(e.target.value)}
                   placeholder="Describe any injuries, medical conditions, or physical limitations..."
                   rows={3}
                   className="input resize-none"
@@ -201,6 +220,8 @@ export function ClientOnboarding() {
               <div>
                 <label className="label">Additional targets (optional)</label>
                 <textarea
+                  value={additionalTargets}
+                  onChange={(e) => setAdditionalTargets(e.target.value)}
                   placeholder="e.g., Run 5km in 25 minutes, bench press 100kg..."
                   rows={3}
                   className="input resize-none"
@@ -254,6 +275,10 @@ export function ClientOnboarding() {
         <div className="card p-8">
           {renderStep()}
         </div>
+
+        {error && (
+          <p className="mt-4 rounded-lg bg-[#f5d5d5] px-4 py-3 text-sm text-[#8b4a4a]">{error}</p>
+        )}
 
         {/* Navigation buttons */}
         <div className="mt-6 flex gap-3">

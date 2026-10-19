@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Check, Plus, Dumbbell, Trophy, Flame, ChevronRight } from 'lucide-react'
+import { Check, Plus, Dumbbell, Trophy, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { formatDate, addActivityEvent } from '../../lib/queries'
+import { addActivityEvent } from '../../lib/queries'
+import { createNotification } from '../../lib/notifications'
 
 type LogEntry = {
   id?: string
@@ -28,6 +29,7 @@ export function WorkoutSession() {
   const [showCompletion, setShowCompletion] = useState(false)
   const [feeling, setFeeling] = useState<number>(0)
   const [error, setError] = useState('')
+  const [savedMessage, setSavedMessage] = useState('')
   const [useMockData] = useState(false) // Set to false for production
 
   useEffect(() => {
@@ -214,52 +216,56 @@ export function WorkoutSession() {
     ])
   }
 
+  const persistLogs = async () => {
+    const { error: deleteError } = await supabase.from('session_logs').delete().eq('session_id', sessionId)
+    if (deleteError) throw deleteError
+    if (logs.length > 0) {
+      const { error: insertError } = await supabase.from('session_logs').insert(
+        logs.map((l) => ({
+          session_id: sessionId,
+          exercise_name: l.exercise_name,
+          set_number: l.set_number,
+          reps: l.reps,
+          weight: l.weight,
+          completed: l.completed,
+        })),
+      )
+      if (insertError) throw insertError
+    }
+  }
+
   const handleSave = async () => {
     if (!sessionId || !profile) return
     setSaving(true)
     try {
-      await supabase.from('session_logs').delete().eq('session_id', sessionId)
-      if (logs.length > 0) {
-        await supabase.from('session_logs').insert(
-          logs.map((l) => ({
-            session_id: sessionId,
-            exercise_name: l.exercise_name,
-            set_number: l.set_number,
-            reps: l.reps,
-            weight: l.weight,
-            completed: l.completed,
-          })),
-        )
-      }
-      await supabase
+      await persistLogs()
+      const { error: updateError } = await supabase
         .from('workout_sessions')
         .update({ status: 'in_progress' })
         .eq('id', sessionId)
-    } catch (err) {
+      if (updateError) throw updateError
+      setSavedMessage('Progress saved')
+      setTimeout(() => setSavedMessage(''), 2500)
+    } catch (err: any) {
       console.error(err)
+      alert(`Failed to save progress: ${err?.message || 'Unknown error'}`)
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleOpenCompletion = () => {
+    const remaining = logs.filter((l) => !l.completed).length
+    if (remaining > 0 && !confirm(`${remaining} set${remaining === 1 ? '' : 's'} not ticked off yet. Finish the workout anyway?`)) return
+    setShowCompletion(true)
   }
 
   const handleComplete = async () => {
     if (!sessionId || !profile) return
     setSaving(true)
     try {
-      await supabase.from('session_logs').delete().eq('session_id', sessionId)
-      if (logs.length > 0) {
-        await supabase.from('session_logs').insert(
-          logs.map((l) => ({
-            session_id: sessionId,
-            exercise_name: l.exercise_name,
-            set_number: l.set_number,
-            reps: l.reps,
-            weight: l.weight,
-            completed: l.completed,
-          })),
-        )
-      }
-      await supabase
+      await persistLogs()
+      const { error: updateError } = await supabase
         .from('workout_sessions')
         .update({
           feeling: feeling || null,
@@ -267,15 +273,63 @@ export function WorkoutSession() {
           completed_at: new Date().toISOString(),
         })
         .eq('id', sessionId)
-      await addActivityEvent(profile.id, null, 'workout_completed', `Completed: ${session?.title}`)
+      if (updateError) throw updateError
+      await addActivityEvent(profile.id, session?.trainer_id || null, 'workout_completed', `Completed: ${session?.title}`)
+      if (session?.trainer_id) {
+        await createNotification(
+          session.trainer_id,
+          'workout_completed',
+          'Workout completed',
+          `${profile.full_name} completed "${session.title}".`,
+          { session_id: sessionId },
+        )
+      }
       setCompleted(true)
       setShowCompletion(false)
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
+      alert(`Failed to complete workout: ${err?.message || 'Unknown error'}`)
     } finally {
       setSaving(false)
     }
   }
+
+  const completionModal = showCompletion && (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
+      <div className="card p-6 max-w-sm w-full">
+        <div className="grid size-16 place-items-center rounded-full bg-[#edf3d5] text-[#718b33] mx-auto mb-4">
+          <Trophy size={32} />
+        </div>
+        <h2 className="font-display text-xl font-semibold text-[#25342d] text-center mb-2">Finish workout</h2>
+        <p className="text-sm text-[#969f96] text-center mb-6">
+          {logs.filter(l => l.completed).length} of {logs.length} sets completed
+        </p>
+
+        <p className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#9aa198] mb-3">How did it feel?</p>
+        <div className="flex gap-2 mb-6">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              onClick={() => setFeeling(n)}
+              aria-label={`${n} star${n === 1 ? '' : 's'}`}
+              className={`flex-1 py-3 text-2xl ${feeling >= n ? 'text-[#ad784b]' : 'text-[#d0d0c8]'}`}
+            >
+              ★
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-3">
+          <button onClick={() => setShowCompletion(false)} disabled={saving} className="btn-secondary flex-1">
+            Cancel
+          </button>
+          <button onClick={handleComplete} disabled={saving} className="btn-primary flex-1">
+            {saving ? 'Completing...' : 'Done'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 
   if (loading) {
     return (
@@ -315,17 +369,32 @@ export function WorkoutSession() {
     )
   }
 
+  if (!session) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 px-6 py-20">
+        <p className="text-sm text-[#969f96]">Workout not found</p>
+        <Link to="/app/workouts" className="btn-primary">Back to workouts</Link>
+      </div>
+    )
+  }
+
   if (!currentExercise) {
     return (
-      <div className="flex flex-col items-center justify-center px-6 py-20">
-        <p className="text-sm text-[#969f96]">No exercises in this workout</p>
+      <div className="flex flex-col items-center justify-center gap-4 px-6 py-20 text-center">
+        <h1 className="font-display text-2xl font-semibold text-[#25342d]">{session.title}</h1>
+        <p className="text-sm text-[#969f96]">Your trainer hasn't added exercises to this workout.</p>
+        <div className="flex gap-3">
+          <Link to="/app/workouts" className="btn-secondary">Back to workouts</Link>
+          <button onClick={() => setShowCompletion(true)} className="btn-primary">Mark as done</button>
+        </div>
+        {completionModal}
       </div>
     )
   }
 
   const completedInExercise = currentLogs.filter(l => l.completed).length
   const totalInExercise = currentLogs.length
-  const allExercisesCompleted = exerciseGroups.every(g => g.logs.every(l => l.completed))
+  const isLastExercise = currentExerciseIndex === exerciseGroups.length - 1
 
   return (
     <div className="flex flex-col gap-7">
@@ -407,69 +476,32 @@ export function WorkoutSession() {
         </button>
       </section>
 
-      <div className="flex gap-3">
-        {!allExercisesCompleted ? (
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-primary flex-1"
-          >
-            {saving ? 'Saving...' : 'Save progress'}
-          </button>
-        ) : (
-          <button
-            onClick={() => setShowCompletion(true)}
-            className="btn-primary flex-1"
-          >
-            Complete workout
+      <p className="text-xs text-[#969f96]">
+        {completedInExercise} of {totalInExercise} sets done for this exercise
+        {savedMessage && <span className="ml-2 font-semibold text-[#718b33]">· {savedMessage}</span>}
+      </p>
+
+      <div className="flex flex-wrap gap-3">
+        {currentExerciseIndex > 0 && (
+          <button onClick={() => setCurrentExerciseIndex(i => i - 1)} className="btn-secondary flex-1">
+            <ChevronLeft className="size-4" />Previous
           </button>
         )}
-        
-        {currentExerciseIndex < exerciseGroups.length - 1 && allExercisesCompleted && (
-          <button
-            onClick={() => setCurrentExerciseIndex(i => i + 1)}
-            className="btn-secondary flex-1"
-          >
-            Next exercise
+        <button onClick={handleSave} disabled={saving} className="btn-secondary flex-1">
+          {saving ? 'Saving...' : 'Save progress'}
+        </button>
+        {isLastExercise ? (
+          <button onClick={handleOpenCompletion} className="btn-primary flex-1">
+            Complete workout
+          </button>
+        ) : (
+          <button onClick={() => setCurrentExerciseIndex(i => i + 1)} className="btn-primary flex-1">
+            Next exercise<ChevronRight className="size-4" />
           </button>
         )}
       </div>
 
-      {/* Completion Modal */}
-      {showCompletion && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
-          <div className="card p-6 max-w-sm w-full">
-            <div className="grid size-16 place-items-center rounded-full bg-[#edf3d5] text-[#718b33] mx-auto mb-4">
-              <Trophy size={32} />
-            </div>
-            <h2 className="font-display text-xl font-semibold text-[#25342d] text-center mb-2">Workout complete!</h2>
-            <p className="text-sm text-[#969f96] text-center mb-6">
-              {logs.filter(l => l.completed).length} sets completed
-            </p>
-            
-            <p className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#9aa198] mb-3">How did it feel?</p>
-            <div className="flex gap-2 mb-6">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setFeeling(n)}
-                  className={`flex-1 py-3 text-2xl ${feeling >= n ? 'text-[#ad784b]' : 'text-[#d0d0c8]'}`}
-                >
-                  {'★'.repeat(n)}
-                </button>
-              ))}
-            </div>
-            
-            <button
-              onClick={handleComplete}
-              disabled={saving}
-              className="btn-primary w-full"
-            >
-              {saving ? 'Completing...' : 'Done'}
-            </button>
-          </div>
-        </div>
-      )}
+      {completionModal}
     </div>
   )
 }

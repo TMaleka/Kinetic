@@ -45,13 +45,14 @@ export async function fetchClientTrainer(clientId: string) {
     .from('trainer_client_links')
     .select(`
       *,
-      trainer:profiles!trainer_id(id, full_name, avatar_url, phone, bio)
+      trainer:profiles!trainer_id(id, full_name, avatar_url, phone, bio, specialization, location)
     `)
     .eq('client_id', clientId)
     .eq('status', 'active')
-    .maybeSingle()
+    .order('created_at', { ascending: false })
+    .limit(1)
   if (error) throw error
-  return data
+  return data?.[0] ?? null
 }
 
 export async function createClientLink(
@@ -183,7 +184,8 @@ export async function fetchSessionLogs(sessionId: string) {
 }
 
 export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? parseLocalDate(dateStr) : new Date(dateStr)
+  return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -227,6 +229,11 @@ export function toLocalISO(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+export function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 export function addDays(date: Date, days: number): Date {
   const result = new Date(date)
   result.setDate(result.getDate() + days)
@@ -250,13 +257,13 @@ export async function scheduleSessionsFromPlan(
     if (daysError) throw daysError
     if (!planDays || planDays.length === 0) return { success: false, message: 'No days in plan' }
 
-    // Start from today or provided start date
-    const start = startDate ? new Date(startDate) : new Date()
+    // Parse YYYY-MM-DD as a local date (new Date('YYYY-MM-DD') is UTC and can shift the day)
+    const start = startDate ? parseLocalDate(startDate) : new Date()
     const sessionsToCreate = []
 
-    // Create sessions for each plan day
-    for (const day of planDays) {
-      const sessionDate = addDays(start, day.day_order - 1)
+    // Day N of the plan (sorted by day_order) is scheduled N-1 days after the start date
+    for (const [index, day] of planDays.entries()) {
+      const sessionDate = addDays(start, index)
       const dateStr = toLocalISO(sessionDate)
 
       // Check if session already exists for this day
@@ -303,7 +310,8 @@ export async function scheduleSessionsFromPlan(
     return { success: true, count: 0, message: 'All sessions already scheduled' }
   } catch (error) {
     console.error('Error scheduling sessions:', error)
-    return { success: false, message: 'Failed to schedule sessions' }
+    const message = (error as { message?: string })?.message || 'Failed to schedule sessions'
+    return { success: false, message }
   }
 }
 
@@ -398,4 +406,82 @@ export async function cancelInvitation(invitationId: string) {
     .eq('id', invitationId)
   if (error) throw error
   return { success: true }
+}
+
+export type SessionStatus = 'scheduled' | 'in_progress' | 'completed' | 'missed'
+
+// Sessions are never marked "missed" in the database, so treat past, unfinished ones as missed.
+export function effectiveStatus(session: { status: string; scheduled_date: string }): SessionStatus {
+  if ((session.status === 'scheduled' || session.status === 'in_progress') && session.scheduled_date < todayISO()) {
+    return 'missed'
+  }
+  return session.status as SessionStatus
+}
+
+export function adherencePercent(sessions: { status: string; scheduled_date: string }[]): number {
+  const due = sessions.filter((s) => s.scheduled_date <= todayISO())
+  if (due.length === 0) return 0
+  const done = due.filter((s) => s.status === 'completed').length
+  return Math.round((done / due.length) * 100)
+}
+
+// Consecutive days (ending today or yesterday) with at least one completed session.
+export function computeStreak(sessions: { status: string; scheduled_date: string }[]): number {
+  const dates = new Set(sessions.filter((s) => s.status === 'completed').map((s) => s.scheduled_date))
+  let cursor = new Date()
+  if (!dates.has(toLocalISO(cursor))) cursor = addDays(cursor, -1)
+  let streak = 0
+  while (dates.has(toLocalISO(cursor))) {
+    streak++
+    cursor = addDays(cursor, -1)
+  }
+  return streak
+}
+
+const PHOTO_BUCKET = 'progress-photos'
+const STORAGE_PREFIX = 'storage:'
+
+export async function uploadProgressPhoto(clientId: string, file: File): Promise<string> {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
+  const path = `${clientId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+  const { error } = await supabase.storage.from(PHOTO_BUCKET).upload(path, file, {
+    contentType: file.type || undefined,
+    upsert: false,
+  })
+  if (error) throw error
+  return `${STORAGE_PREFIX}${path}`
+}
+
+export async function deleteProgressPhotoFile(photoUrl: string) {
+  if (!photoUrl.startsWith(STORAGE_PREFIX)) return
+  const { error } = await supabase.storage.from(PHOTO_BUCKET).remove([photoUrl.slice(STORAGE_PREFIX.length)])
+  if (error) console.error('Failed to delete photo file:', error)
+}
+
+// Replaces "storage:" paths with short-lived signed URLs; external URLs are kept as-is.
+export async function withSignedPhotoUrls<T extends { photo_url: string }>(photos: T[]): Promise<(T & { display_url: string })[]> {
+  const paths = photos.filter((p) => p.photo_url.startsWith(STORAGE_PREFIX)).map((p) => p.photo_url.slice(STORAGE_PREFIX.length))
+  const signed = new Map<string, string>()
+  if (paths.length) {
+    const { data, error } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(paths, 60 * 60)
+    if (error) console.error('Failed to sign photo URLs:', error)
+    ;(data || []).forEach((d) => d.path && d.signedUrl && signed.set(d.path, d.signedUrl))
+  }
+  return photos.map((p) => ({
+    ...p,
+    display_url: p.photo_url.startsWith(STORAGE_PREFIX) ? signed.get(p.photo_url.slice(STORAGE_PREFIX.length)) || '' : p.photo_url,
+  }))
+}
+
+export async function sendInvitationEmail(invitationId: string): Promise<{ success: boolean; message?: string }> {
+  const { data, error } = await supabase.functions.invoke('send-invite', { body: { invitationId } })
+  if (error) {
+    let message = error.message
+    try {
+      const body = await (error as { context?: Response }).context?.json()
+      if (body?.error) message = body.error
+    } catch { /* keep default */ }
+    return { success: false, message }
+  }
+  return data?.sent ? { success: true } : { success: false, message: data?.error || 'Failed to send email' }
 }

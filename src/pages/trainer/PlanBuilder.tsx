@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import {
-  ArrowLeft, Plus, Trash2, GripVertical, Save, Dumbbell, ChevronDown, ChevronUp, Calendar,
-} from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, GripVertical, Save, Dumbbell, ChevronDown, ChevronUp, Calendar, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner, Modal, Badge } from '../../components/ui'
 import { fetchTrainerClients, scheduleSessionsFromPlan, todayISO } from '../../lib/queries'
+import { createNotification } from '../../lib/notifications'
 
 type Day = {
   id?: string
@@ -173,12 +172,13 @@ export function PlanBuilder() {
       let currentPlanId = planId
 
       if (isEdit) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('workout_plans')
           .update({ title, description: description || null })
           .eq('id', planId)
+        if (updateError) throw updateError
       } else {
-        const { data: newPlan } = await supabase
+        const { data: newPlan, error: insertError } = await supabase
           .from('workout_plans')
           .insert({
             trainer_id: profile.id,
@@ -189,13 +189,11 @@ export function PlanBuilder() {
           })
           .select()
           .maybeSingle()
+        if (insertError) throw insertError
         currentPlanId = newPlan?.id
       }
 
-      if (!currentPlanId) {
-        setSaving(false)
-        return
-      }
+      if (!currentPlanId) throw new Error('Plan was not saved')
 
       // Delete existing days and exercises if editing
       if (isEdit) {
@@ -212,7 +210,7 @@ export function PlanBuilder() {
       // Insert days and exercises
       const insertedDayIds: string[] = []
       for (const day of days) {
-        const { data: newDay } = await supabase
+        const { data: newDay, error: dayError } = await supabase
           .from('plan_days')
           .insert({
             plan_id: currentPlanId,
@@ -223,12 +221,13 @@ export function PlanBuilder() {
           .select()
           .maybeSingle()
 
+        if (dayError) throw dayError
         if (!newDay) continue
 
         insertedDayIds.push(newDay.id)
 
         if (day.exercises.length > 0) {
-          await supabase.from('plan_exercises').insert(
+          const { error: exError } = await supabase.from('plan_exercises').insert(
             day.exercises.map((ex) => ({
               plan_day_id: newDay.id,
               name: ex.name,
@@ -240,28 +239,33 @@ export function PlanBuilder() {
               exercise_order: ex.exercise_order,
             })),
           )
+          if (exError) throw exError
         }
       }
 
-      console.log(`Inserted ${insertedDayIds.length} days for plan ${currentPlanId}`)
-
       // Schedule sessions if client is selected (required for client to see workouts)
-      if (selectedClient && currentPlanId && insertedDayIds.length > 0) {
-        // Small delay to ensure database consistency
-        await new Promise(resolve => setTimeout(resolve, 500))
-
+      if (!isEdit && selectedClient && scheduleSessions && insertedDayIds.length > 0) {
         const result = await scheduleSessionsFromPlan(currentPlanId, selectedClient, profile.id, startDate)
-        console.log('Session scheduling result:', result)
         if (!result.success) {
           console.error('Failed to schedule sessions:', result.message)
           alert(`Warning: Sessions could not be scheduled automatically. Error: ${result.message}`)
         }
       }
 
+      if (!isEdit && selectedClient) {
+        await createNotification(
+          selectedClient,
+          'plan_assigned',
+          'New workout plan',
+          `${profile.full_name || 'Your trainer'} assigned you "${title}".`,
+          { plan_id: currentPlanId },
+        )
+      }
+
       navigate('/trainer/plans')
     } catch (err) {
       console.error('Error saving plan:', err)
-      alert('Failed to save workout plan. Please try again.')
+      alert(`Failed to save workout plan: ${(err as { message?: string })?.message || 'Unknown error'}`)
     } finally {
       setSaving(false)
     }
@@ -509,7 +513,12 @@ export function PlanBuilder() {
       {showExercisePicker !== null && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
           <div className="card p-6 max-w-lg w-full">
-            <h2 className="font-display text-xl font-semibold text-[#25342d] mb-6">Add exercise</h2>
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="font-display text-xl font-semibold text-[#25342d]">Add exercise</h2>
+              <button onClick={() => setShowExercisePicker(null)} aria-label="Close" className="btn-ghost p-1.5">
+                <X size={18} />
+              </button>
+            </div>
             <div className="space-y-3">
               <p className="text-sm text-[#969f96]">Pick from common exercises or type your own:</p>
               <div className="flex flex-wrap gap-2">

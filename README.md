@@ -73,6 +73,18 @@ Run the migrations in order:
 1. `001_initial_schema.sql` - Core tables (profiles, sessions, plans, etc.)
 2. `002_notifications.sql` - Notification system
 3. `003_invitations.sql` - Client invitation system
+4. `004_onboarding.sql` - Client goals and trainer goal reviews
+5. `005_template_plans.sql` - Allows unassigned (template) workout plans
+6. `006_audit_fixes.sql` - `onboarding_completed` column, trainer goal review permissions, cross-user notifications
+7. `007_photo_storage.sql` - Private `progress-photos` storage bucket and access policies
+
+### Invite emails (Edge Function)
+Invitation codes are emailed by the `send-invite` Edge Function using [Resend](https://resend.com).
+
+```bash
+supabase functions deploy send-invite --project-ref <ref>
+supabase secrets set --project-ref <ref> RESEND_API_KEY=... INVITE_FROM_EMAIL="KineTic <invites@yourdomain.com>" APP_URL=https://your-app.vercel.app
+```
 
 ### Additional Tables for Onboarding
 ```sql

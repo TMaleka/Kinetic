@@ -4,7 +4,8 @@ import { Dumbbell, Flame, TrendingUp, Calendar, ChevronRight, Check, Play } from
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { formatDate, formatRelative, todayISO, toLocalISO, addDays } from '../../lib/queries'
+import { todayISO, toLocalISO, addDays, adherencePercent, computeStreak } from '../../lib/queries'
+import { WeeklyActivityChart } from '../../components/WeeklyActivityChart'
 
 function StatCard({ label, value, detail, icon: Icon, accent = 'lime' }: { label: string; value: string; detail: string; icon: any; accent?: 'lime' | 'lavender' | 'peach' }) {
   const bg = accent === 'lime' ? 'bg-[#edf3d5]' : accent === 'lavender' ? 'bg-[#eee8f3]' : 'bg-[#f7eadb]'
@@ -35,6 +36,7 @@ export function ClientDashboard() {
   const [weightChange, setWeightChange] = useState<number | null>(null)
   const [goal, setGoal] = useState<string | null>(null)
   const [hasTrainer, setHasTrainer] = useState(false)
+  const [recentSessions, setRecentSessions] = useState<any[]>([])
   const [error, setError] = useState('')
   const [useMockData] = useState(false) // Set to false for production
 
@@ -75,59 +77,23 @@ export function ClientDashboard() {
         .eq('client_id', profile.id)
         .eq('scheduled_date', today)
         .order('created_at', { ascending: false })
-        .maybeSingle()
-      console.log('Today session query result:', todayData)
-      setTodaySession(todayData)
+        .limit(1)
+      setTodaySession(todayData?.[0] ?? null)
 
-      // Calculate streak from completed sessions
-      const { data: completedSessions } = await supabase
+      // Last 12 weeks of sessions for streak, weekly stats and the activity chart
+      const { data: sessionHistory } = await supabase
         .from('workout_sessions')
-        .select('scheduled_date, status')
+        .select('status, scheduled_date')
         .eq('client_id', profile.id)
-        .eq('status', 'completed')
-        .order('scheduled_date', { ascending: false })
+        .gte('scheduled_date', toLocalISO(addDays(new Date(), -7 * 12)))
+        .lte('scheduled_date', today)
+      const history = sessionHistory || []
+      setRecentSessions(history)
+      setStreak(computeStreak(history))
 
-      let currentStreak = 0
-      const sessions = completedSessions || []
-      if (sessions.length > 0) {
-        const dates = sessions.map((s) => s.scheduled_date)
-        const uniqueDates = [...new Set(dates)].sort().reverse()
-
-        const todayDate = new Date()
-        const yesterdayDate = new Date()
-        yesterdayDate.setDate(yesterdayDate.getDate() - 1)
-
-        const lastSessionDate = new Date(uniqueDates[0])
-        if (
-          lastSessionDate.toDateString() === todayDate.toDateString() ||
-          lastSessionDate.toDateString() === yesterdayDate.toDateString()
-        ) {
-          currentStreak = 1
-          for (let i = 1; i < uniqueDates.length; i++) {
-            const prev = new Date(uniqueDates[i - 1])
-            const curr = new Date(uniqueDates[i])
-            const diffDays = Math.round((prev.getTime() - curr.getTime()) / 86400000)
-            if (diffDays <= 2) currentStreak++
-            else break
-          }
-        }
-      }
-      setStreak(currentStreak)
-
-      // Week stats
-      const { data: weekSessions } = await supabase
-        .from('workout_sessions')
-        .select('scheduled_date, status')
-        .eq('client_id', profile.id)
-        .gte('scheduled_date', toLocalISO(weekAgo))
-      
-      const weekData = weekSessions || []
+      const weekData = history.filter((s) => s.scheduled_date >= toLocalISO(weekAgo))
       setWeekCount(weekData.filter((s) => s.status === 'completed').length)
-      
-      // Calculate adherence (completed / scheduled)
-      const scheduledThisWeek = weekData.length
-      const completedThisWeek = weekData.filter((s) => s.status === 'completed').length
-      setAdherence(scheduledThisWeek > 0 ? Math.round((completedThisWeek / scheduledThisWeek) * 100) : 0)
+      setAdherence(adherencePercent(weekData))
 
       // Latest weight and change
       const { data: weightData } = await supabase
@@ -244,9 +210,9 @@ export function ClientDashboard() {
       )}
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Weekly adherence" value={`${adherence}%`} detail="On track this week" icon={Calendar} />
-        <StatCard label="Current streak" value={`${streak} days`} detail="Personal best" icon={Flame} accent="peach" />
-        <StatCard label="Workouts" value={`${weekCount}`} detail="This week" icon={Dumbbell} accent="lavender" />
+        <StatCard label="Weekly adherence" value={`${adherence}%`} detail={adherence >= 80 ? 'On track this week' : 'Last 7 days'} icon={Calendar} />
+        <StatCard label="Current streak" value={`${streak} ${streak === 1 ? 'day' : 'days'}`} detail="Consecutive workout days" icon={Flame} accent="peach" />
+        <StatCard label="Workouts" value={`${weekCount}`} detail="Completed in the last 7 days" icon={Dumbbell} accent="lavender" />
       </div>
 
       {!hasTrainer && (
@@ -254,41 +220,19 @@ export function ClientDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-display text-xl font-semibold text-[#25342d]">Connect with a trainer</h2>
-              <p className="mt-1 text-xs text-[#929990]">Get personalized workout plans and expert guidance</p>
+              <p className="mt-1 text-xs text-[#929990]">
+                Ask your trainer to invite <span className="font-semibold">{profile?.email}</span>, then accept the invitation on your profile.
+              </p>
             </div>
-            <button onClick={() => alert('Trainer search feature coming soon! For now, ask your trainer to send you an invitation.')} className="rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white hover:bg-[#3d4b40] transition">
-              Find a Trainer
-            </button>
+            <Link to="/app/profile" className="shrink-0 rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white hover:bg-[#3d4b40] transition">
+              View invitations
+            </Link>
           </div>
         </section>
       )}
 
       <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
-        <section className="card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Progress overview</h2>
-              <p className="mt-1 text-xs text-[#929990]">Last 8 weeks</p>
-            </div>
-            <button onClick={() => alert('Time range selector coming soon! Currently showing 8 weeks.')} className="rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a] hover:bg-[#f8f8f4] transition">8 weeks⌄</button>
-          </div>
-          <div className="mt-8 flex h-44 items-end gap-3 border-b border-[#eceee5] px-2">
-            {[38, 48, 43, 65, 58, 72, 68, 83, 78, 92].map((v, i) => (
-              <div key={i} className="flex flex-1 items-end">
-                <div
-                  className="w-full rounded-t-md bg-[#b9cd69] transition-all hover:bg-[#a5bd55]"
-                  style={{ height: `${v}%` }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex justify-between text-[10px] text-[#a1a8a0]">
-            <span>May</span>
-            <span>Jun</span>
-            <span>Jul</span>
-            <span>Aug</span>
-          </div>
-        </section>
+        <WeeklyActivityChart sessions={recentSessions} />
 
         <section className="card p-6">
           <div className="flex items-center justify-between">
@@ -313,10 +257,10 @@ export function ClientDashboard() {
             )}
             <div className="flex items-center justify-between rounded-xl bg-[#f8f8f4] p-4">
               <div>
-                <p className="text-xs text-[#969f96]">Workouts</p>
+                <p className="text-xs text-[#969f96]">Workouts this week</p>
                 <p className="text-lg font-semibold text-[#25342d]">{weekCount}</p>
               </div>
-              <span className="text-xs font-semibold text-[#718b33]">+{weekCount}</span>
+              <span className="text-xs font-semibold text-[#718b33]">{streak > 0 ? `${streak}-day streak` : ''}</span>
             </div>
             <div className="flex items-center justify-between rounded-xl bg-[#f8f8f4] p-4">
               <div>

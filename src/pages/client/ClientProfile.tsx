@@ -3,7 +3,7 @@ import { LogOut, UserPlus, X, Check, User, Mail, Calendar } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { Spinner } from '../../components/ui'
-import { formatDate, updateProfile, fetchClientInvitations, acceptInvitation } from '../../lib/queries'
+import { formatDate, updateProfile, fetchClientInvitations, acceptInvitation, fetchClientTrainer } from '../../lib/queries'
 
 export function ClientProfile() {
   const { profile, signOut, refreshProfile } = useAuth()
@@ -50,6 +50,12 @@ export function ClientProfile() {
     } catch (err) {
       console.error(err)
     }
+    try {
+      const link = await fetchClientTrainer(profile.id)
+      setTrainer(link?.trainer || null)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const handleAcceptInvitation = async (invitationId: string) => {
@@ -57,11 +63,13 @@ export function ClientProfile() {
     setAccepting(invitationId)
     try {
       const result = await acceptInvitation(invitationId, profile.id)
-      if (result.success) {
-        loadInvitations()
+      if (!result.success || result.accepted === false) {
+        alert('This invitation could not be accepted. It may have expired or been sent to a different email address.')
       }
+      loadInvitations()
     } catch (err) {
       console.error(err)
+      alert('Failed to accept invitation. Please try again.')
     } finally {
       setAccepting(null)
     }
@@ -77,8 +85,9 @@ export function ClientProfile() {
       })
       await refreshProfile()
       setEditing(false)
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
+      alert(`Failed to save profile: ${err?.message || 'Unknown error'}`)
     } finally {
       setSaving(false)
     }
@@ -117,7 +126,7 @@ export function ClientProfile() {
                   <UserPlus className="size-4" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-[#3d4b40]">{invitation.trainer.full_name}</p>
+                  <p className="text-sm font-semibold text-[#3d4b40]">{invitation.trainer?.full_name || 'A trainer'}</p>
                   <p className="text-xs text-[#969f96]">wants to be your trainer</p>
                 </div>
                 <button
@@ -148,7 +157,8 @@ export function ClientProfile() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold text-[#3d4b40]">{trainer.full_name}</p>
-              <p className="text-xs text-[#969f96]">{trainer.specialization}</p>
+              {trainer.specialization && <p className="text-xs text-[#969f96]">{trainer.specialization}</p>}
+              {trainer.phone && <p className="text-xs text-[#969f96]">{trainer.phone}</p>}
               {trainer.location && <p className="text-xs text-[#969f96]">{trainer.location}</p>}
             </div>
           </div>
@@ -168,7 +178,11 @@ export function ClientProfile() {
           </div>
           {!editing && (
             <button
-              onClick={() => setEditing(true)}
+              onClick={() => {
+                setFullName(profile.full_name || '')
+                setPhone(profile.phone || '')
+                setEditing(true)
+              }}
               className="flex items-center gap-2 rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a]"
             >
               Edit

@@ -13,11 +13,13 @@ export function AuthPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setNotice('')
     setLoading(true)
 
     try {
@@ -28,6 +30,13 @@ export function AuthPage() {
           options: { data: { full_name: fullName, role } },
         })
         if (error) throw error
+
+        if (!data.session) {
+          // Email confirmation is enabled: there is no session until the user confirms.
+          setNotice('Account created. Check your email to confirm your address, then sign in.')
+          setMode('signin')
+          return
+        }
 
         // Update profile with role and name
         if (data.user) {
@@ -168,6 +177,9 @@ export function AuthPage() {
               </div>
             </div>
 
+            {notice && (
+              <p className="rounded-lg bg-[#edf3d5] px-4 py-3 text-sm text-[#4d604c]">{notice}</p>
+            )}
             {error && (
               <div className="text-sm text-[#8b4a4a] bg-[#f5d5d5] rounded-lg px-3 py-2">
                 {error}
@@ -189,7 +201,11 @@ export function AuthPage() {
             ? 'Already have an account? '
             : "Don't have an account? "}
           <button
-            onClick={() => setMode(mode === 'signup' ? 'signin' : 'signup')}
+            type="button"
+            onClick={() => {
+              setMode(mode === 'signup' ? 'signin' : 'signup')
+              setError('')
+            }}
             className="text-[#718b33] font-semibold hover:underline"
           >
             {mode === 'signup' ? 'Sign in' : 'Sign up'}

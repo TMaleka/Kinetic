@@ -4,7 +4,7 @@ import { ChevronRight, CalendarDays, Target, Users, TrendingUp, ArrowUpRight, Pl
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { formatRelative, todayISO, addDays, toLocalISO } from '../../lib/queries'
+import { formatRelative, todayISO, addDays, toLocalISO, adherencePercent } from '../../lib/queries'
 import { TrainerGoalReview } from '../onboarding/TrainerGoalReview'
 
 type AttentionItem = {
@@ -58,6 +58,9 @@ export function TrainerDashboard() {
   const [loading, setLoading] = useState(true)
   const [activeClientsCount, setActiveClientsCount] = useState(0)
   const [todayStats, setTodayStats] = useState({ total: 0, completed: 0 })
+  const [yesterdayTotal, setYesterdayTotal] = useState(0)
+  const [weeklyAdherence, setWeeklyAdherence] = useState<{ percent: number; due: number }>({ percent: 0, due: 0 })
+  const [newClientsThisMonth, setNewClientsThisMonth] = useState(0)
   const [attentionItems, setAttentionItems] = useState<AttentionItem[]>([])
   const [recentActivity, setRecentActivity] = useState<any[]>([])
   const [useMockData] = useState(false) // Set to false for production
@@ -142,7 +145,7 @@ export function TrainerDashboard() {
     try {
       const { data: links } = await supabase
         .from('trainer_client_links')
-        .select('client_id, client:profiles!client_id(id, full_name, avatar_url)')
+        .select('client_id, started_at, client:profiles!client_id(id, full_name, avatar_url)')
         .eq('trainer_id', profile.id)
         .eq('status', 'active')
 
@@ -164,6 +167,21 @@ export function TrainerDashboard() {
         total: sessions.length,
         completed: sessions.filter((s: any) => s.status === 'completed').length,
       })
+
+      const monthStart = toLocalISO(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
+      setNewClientsThisMonth((links || []).filter((l: any) => l.started_at && l.started_at >= monthStart).length)
+
+      // Last 7 days (incl. today) for weekly adherence and yesterday's comparison
+      const { data: weekSessions } = await supabase
+        .from('workout_sessions')
+        .select('status, scheduled_date')
+        .in('client_id', clientIds.length ? clientIds : ['00000000-0000-0000-0000-000000000000'])
+        .gte('scheduled_date', toLocalISO(addDays(new Date(), -6)))
+        .lte('scheduled_date', today)
+      const week = weekSessions || []
+      setWeeklyAdherence({ percent: adherencePercent(week), due: week.length })
+      const yesterday = toLocalISO(addDays(new Date(), -1))
+      setYesterdayTotal(week.filter((s: any) => s.scheduled_date === yesterday).length)
 
       // Count missed workouts per client
       const { data: missedSessions } = await supabase
@@ -249,11 +267,54 @@ export function TrainerDashboard() {
         .limit(5)
 
       setRecentActivity(activity || [])
+
+      // Client goals submitted during onboarding that still need a trainer review
+      const { data: goals } = await supabase
+        .from('client_goals')
+        .select('*, client:profiles!client_id(full_name)')
+        .in('client_id', clientIds.length ? clientIds : ['00000000-0000-0000-0000-000000000000'])
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+      setPendingGoalReviews(goals || [])
     } catch (err) {
       console.error('Dashboard error:', err)
       setError('Failed to load dashboard data. Please refresh the page.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const reviewGoal = async (
+    goal: any,
+    action: 'confirm' | 'adjust' | 'reject',
+    adjustedGoal?: string,
+    feedback?: string,
+  ) => {
+    if (!profile) return
+    const status = action === 'confirm' ? 'confirmed' : action === 'adjust' ? 'adjusted' : 'rejected'
+    try {
+      const { error: reviewError } = await supabase.from('goal_reviews').insert({
+        goal_id: goal.id,
+        trainer_id: profile.id,
+        client_id: goal.client_id,
+        action,
+        adjusted_goal: adjustedGoal || null,
+        feedback: feedback || null,
+      })
+      if (reviewError) throw reviewError
+      const { error: goalError } = await supabase.from('client_goals').update({ status }).eq('id', goal.id)
+      if (goalError) throw goalError
+      if (action !== 'reject') {
+        await supabase
+          .from('trainer_client_links')
+          .update({ goals: action === 'adjust' ? adjustedGoal : goal.goal })
+          .eq('trainer_id', profile.id)
+          .eq('client_id', goal.client_id)
+      }
+      setPendingGoalReviews((prev) => prev.filter((g) => g.id !== goal.id))
+    } catch (err: any) {
+      console.error('Goal review failed:', err)
+      alert(`Could not save goal review: ${err?.message || 'Unknown error'}`)
     }
   }
 
@@ -304,7 +365,7 @@ export function TrainerDashboard() {
           </h1>
           <p className="mt-2 text-sm text-[#7c857c]">Here's what's happening with your clients today.</p>
         </div>
-        <Link to="/trainer/plans" className="flex w-fit items-center gap-2 rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white shadow-lg shadow-[#25342d]/10">
+        <Link to="/trainer/plans/new" className="flex w-fit items-center gap-2 rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white shadow-lg shadow-[#25342d]/10">
           <Plus className="size-4" />Create plan
         </Link>
       </div>
@@ -316,9 +377,9 @@ export function TrainerDashboard() {
               <h2 className="font-display text-xl font-semibold text-[#25342d]">Today's progress</h2>
               <p className="mt-1 text-xs text-[#929990]">Your coaching rhythm, at a glance</p>
             </div>
-            <button className="text-xs font-semibold text-[#8aa143]">
-              View reports <ArrowUpRight className="ml-1 inline size-3" />
-            </button>
+            <Link to="/trainer/clients" className="text-xs font-semibold text-[#8aa143]">
+              View clients <ArrowUpRight className="ml-1 inline size-3" />
+            </Link>
           </div>
           <div className="mt-7 flex flex-col gap-6 md:flex-row md:items-center">
             <div className="flex items-center gap-6">
@@ -338,7 +399,7 @@ export function TrainerDashboard() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-[#3d4b40]">Completion rate</p>
-                  <p className="text-xs text-[#969f96]">{getCompletionRate()}% this week</p>
+                  <p className="text-xs text-[#969f96]">{getCompletionRate()}% today · {weeklyAdherence.percent}% this week</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -370,19 +431,18 @@ export function TrainerDashboard() {
               {pendingGoalReviews.map((goalRequest) => (
                 <TrainerGoalReview
                   key={goalRequest.id}
-                  goalRequest={goalRequest}
-                  onConfirm={(feedback) => {
-                    console.log('Goal confirmed:', goalRequest.id, feedback)
-                    setPendingGoalReviews(prev => prev.filter(r => r.id !== goalRequest.id))
+                  goalRequest={{
+                    clientId: goalRequest.client_id,
+                    clientName: goalRequest.client?.full_name || 'Client',
+                    goal: goalRequest.goal,
+                    startingWeight: goalRequest.starting_weight ?? '—',
+                    targetWeight: goalRequest.target_weight ?? '—',
+                    timeline: goalRequest.timeline || 'Not specified',
+                    submittedAt: goalRequest.created_at,
                   }}
-                  onAdjust={(adjustedGoal, feedback) => {
-                    console.log('Goal adjusted:', goalRequest.id, adjustedGoal, feedback)
-                    setPendingGoalReviews(prev => prev.filter(r => r.id !== goalRequest.id))
-                  }}
-                  onReject={() => {
-                    console.log('Goal rejected:', goalRequest.id)
-                    setPendingGoalReviews(prev => prev.filter(r => r.id !== goalRequest.id))
-                  }}
+                  onConfirm={(feedback) => reviewGoal(goalRequest, 'confirm', undefined, feedback)}
+                  onAdjust={(adjustedGoal, feedback) => reviewGoal(goalRequest, 'adjust', adjustedGoal, feedback)}
+                  onReject={() => reviewGoal(goalRequest, 'reject')}
                 />
               ))}
             </div>
@@ -431,53 +491,27 @@ export function TrainerDashboard() {
           </div>
         </section>
 
-        <section className="card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Needs attention</h2>
-              <p className="mt-1 text-xs text-[#929990]">Clients who need your help</p>
-            </div>
-            <Link to="/trainer/clients" className="text-xs font-semibold text-[#8aa143]">
-              View all <ArrowUpRight className="ml-1 inline size-3" />
-            </Link>
-          </div>
-          <div className="mt-6 space-y-3">
-            {attentionItems.length > 0 ? (
-              attentionItems.slice(0, 3).map((item) => (
-                <Link
-                  key={item.clientId}
-                  to={`/trainer/clients/${item.clientId}`}
-                  className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4 hover:bg-[#f8f8f4] transition"
-                >
-                  <div className={`grid size-10 place-items-center rounded-full ${
-                    item.reason === 'missed_workout' ? 'bg-[#f5d5d5] text-[#8b4a4a]' :
-                    item.reason === 'no_activity' ? 'bg-[#f7eadb] text-[#ad784b]' :
-                    'bg-[#edf3d5] text-[#718b33]'
-                  }`}>
-                    {item.reason === 'missed_workout' ? '!' :
-                     item.reason === 'no_activity' ? '⚠' :
-                     '📷'}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-[#3d4b40]">{item.clientName}</p>
-                    <p className="text-xs text-[#969f96]">{item.details}</p>
-                  </div>
-                  <ChevronRight className="size-4 text-[#aab2a8]" />
-                </Link>
-              ))
-            ) : (
-              <div className="flex items-center justify-center rounded-xl bg-[#f8f8f4] p-8">
-                <p className="text-sm text-[#969f96]">All clients are on track ✓</p>
-              </div>
-            )}
-          </div>
-        </section>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Today's sessions" value={String(todayStats.total).padStart(2, '0')} detail="2 more than yesterday" icon={CalendarDays} />
-        <StatCard label="Weekly adherence" value="86%" detail="Up 8.4% this week" icon={Target} accent="lavender" />
-        <StatCard label="Active clients" value={String(activeClientsCount)} detail="3 new this month" icon={Users} accent="peach" />
+        <StatCard
+          label="Today's sessions"
+          value={String(todayStats.total).padStart(2, '0')}
+          detail={
+            todayStats.total === yesterdayTotal
+              ? 'Same as yesterday'
+              : `${Math.abs(todayStats.total - yesterdayTotal)} ${todayStats.total > yesterdayTotal ? 'more' : 'fewer'} than yesterday`
+          }
+          icon={CalendarDays}
+        />
+        <StatCard
+          label="Weekly adherence"
+          value={`${weeklyAdherence.percent}%`}
+          detail={weeklyAdherence.due ? `${weeklyAdherence.due} sessions due in the last 7 days` : 'No sessions due this week'}
+          icon={Target}
+          accent="lavender"
+        />
+        <StatCard label="Active clients" value={String(activeClientsCount)} detail={`${newClientsThisMonth} new this month`} icon={Users} accent="peach" />
       </div>
 
       {recentActivity.length > 0 && (

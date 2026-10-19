@@ -4,7 +4,7 @@ import { Plus, Search, UserPlus, ChevronRight, Mail, Copy, Check } from 'lucide-
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { formatDate, createInvitation, fetchTrainerInvitations, cancelInvitation } from '../../lib/queries'
+import { createInvitation, fetchTrainerInvitations, cancelInvitation, effectiveStatus, todayISO, sendInvitationEmail } from '../../lib/queries'
 
 type ClientRow = {
   id: string
@@ -31,6 +31,8 @@ export function TrainerClients() {
   const [addError, setAddError] = useState('')
   const [invitations, setInvitations] = useState<any[]>([])
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null)
+  const [inviteNotice, setInviteNotice] = useState('')
   const [useMockData] = useState(false) // Set to false for production
 
   useEffect(() => {
@@ -124,7 +126,10 @@ export function TrainerClients() {
         .eq('trainer_id', profile.id)
         .order('created_at', { ascending: false })
 
-      if (!links) return
+      if (!links) {
+        setClients([])
+        return
+      }
 
       const clientIds = links.map((l: any) => l.client.id)
 
@@ -138,10 +143,12 @@ export function TrainerClients() {
       const sessionMap = new Map<string, { total: number; completed: number; last?: any; missed: number }>()
       ;(sessions || []).forEach((s: any) => {
         const existing = sessionMap.get(s.client_id) || { total: 0, completed: 0, missed: 0 }
-        existing.total++
-        if (s.status === 'completed') existing.completed++
-        if (s.status === 'missed') existing.missed++
-        if (!existing.last) existing.last = s
+        const status = effectiveStatus(s)
+        const isDue = s.scheduled_date <= todayISO()
+        if (isDue) existing.total++
+        if (status === 'completed') existing.completed++
+        if (status === 'missed') existing.missed++
+        if (!existing.last && isDue) existing.last = s
         sessionMap.set(s.client_id, existing)
       })
 
@@ -206,11 +213,21 @@ export function TrainerClients() {
         return
       }
 
+      const invitedEmail = clientEmail.trim()
       setShowAdd(false)
       setClientEmail('')
       setClientGoals('')
       setAddError('')
       loadInvitations()
+
+      if (result.invitationId) {
+        const emailResult = await sendInvitationEmail(result.invitationId)
+        setInviteNotice(
+          emailResult.success
+            ? `Invitation emailed to ${invitedEmail}.`
+            : `Invitation created, but the email could not be sent (${emailResult.message}). Copy the code below and share it yourself.`,
+        )
+      }
     } catch (err) {
       console.error('Invitation error:', err)
       setAddError(err instanceof Error ? err.message : 'Failed to send invitation')
@@ -219,18 +236,36 @@ export function TrainerClients() {
     }
   }
 
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code)
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code)
+    } catch {
+      window.prompt('Copy this invite code:', code)
+      return
+    }
     setCopiedCode(code)
     setTimeout(() => setCopiedCode(null), 2000)
   }
 
+  const handleResendEmail = async (invitation: { id: string; email: string }) => {
+    setSendingEmail(invitation.id)
+    const result = await sendInvitationEmail(invitation.id)
+    setSendingEmail(null)
+    setInviteNotice(
+      result.success
+        ? `Invitation emailed to ${invitation.email}.`
+        : `Could not email ${invitation.email}: ${result.message}`,
+    )
+  }
+
   const handleCancelInvitation = async (invitationId: string) => {
+    if (!confirm('Cancel this invitation?')) return
     try {
       await cancelInvitation(invitationId)
       loadInvitations()
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
+      alert(`Failed to cancel invitation: ${err?.message || 'Unknown error'}`)
     }
   }
 
@@ -293,15 +328,15 @@ export function TrainerClients() {
             className="input pl-10"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {filters.map((f) => (
             <button
               key={f.id}
               onClick={() => setFilter(f.id as any)}
-              className={`rounded-xl border px-4 text-xs font-semibold ${
+              className={`rounded-xl border px-4 py-2 text-xs font-semibold transition ${
                 filter === f.id
-                  ? 'border-[#e5e7dd] bg-white text-[#596359]'
-                  : 'border-[#e5e7dd] bg-white text-[#899188]'
+                  ? 'border-[#25342d] bg-[#25342d] text-white'
+                  : 'border-[#e5e7dd] bg-white text-[#899188] hover:bg-[#f8f8f4]'
               }`}
             >
               {f.label}
@@ -309,6 +344,13 @@ export function TrainerClients() {
           ))}
         </div>
       </div>
+      {inviteNotice && (
+        <div className="flex items-start justify-between gap-4 rounded-xl bg-[#edf3d5] px-4 py-3 text-sm text-[#4d604c]">
+          <span>{inviteNotice}</span>
+          <button onClick={() => setInviteNotice('')} className="text-xs font-semibold">Dismiss</button>
+        </div>
+      )}
+
       {/* Pending Invitations */}
       {invitations.filter((i) => i.status === 'pending').length > 0 && (
         <section className="card p-6">
@@ -336,6 +378,14 @@ export function TrainerClients() {
                   >
                     {copiedCode === invitation.invite_code ? <Check size={14} /> : <Copy size={14} />}
                     {copiedCode === invitation.invite_code ? 'Copied' : 'Copy'}
+                  </button>
+                  <button
+                    onClick={() => handleResendEmail(invitation)}
+                    disabled={sendingEmail === invitation.id}
+                    className="flex items-center gap-1 rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a] hover:bg-[#f8f8f4]"
+                  >
+                    <Mail size={14} />
+                    {sendingEmail === invitation.id ? 'Sending...' : 'Email'}
                   </button>
                   <button
                     onClick={() => handleCancelInvitation(invitation.id)}
@@ -393,7 +443,7 @@ export function TrainerClients() {
       ) : (
         <div className="flex items-center justify-center rounded-2xl border border-[#e5e7dd] bg-white p-12">
           <p className="text-sm text-[#969f96]">
-            {search ? 'No clients match your search' : 'No clients yet'}
+            {search || filter !== 'all' ? 'No clients match your search or filter' : 'No clients yet — invite your first client above'}
           </p>
         </div>
       )}
@@ -414,7 +464,7 @@ export function TrainerClients() {
                   className="input"
                 />
                 <p className="text-xs text-[#969f96] mt-2">
-                  We'll send them an invitation code to join your training.
+                  We'll email them an invite code. Once they sign up with this email, the invitation appears on their Profile page to accept.
                 </p>
               </div>
               {addError && (

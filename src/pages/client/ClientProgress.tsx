@@ -3,19 +3,20 @@ import { Plus, Camera, X, ChevronRight, Target, TrendingUp } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { formatDate, addActivityEvent, todayISO, toLocalISO, addDays } from '../../lib/queries'
+import { formatDate, addActivityEvent, todayISO, toLocalISO, addDays, uploadProgressPhoto, deleteProgressPhotoFile, withSignedPhotoUrls } from '../../lib/queries'
+import { createNotification } from '../../lib/notifications'
 
-type Category = 'weight' | 'goals'
 
 export function ClientProgress() {
   const { profile } = useAuth()
-  const [category, setCategory] = useState<Category>('weight')
+  const [rangeWeeks, setRangeWeeks] = useState(8)
   const [measurements, setMeasurements] = useState<any[]>([])
   const [photos, setPhotos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddMeasurement, setShowAddMeasurement] = useState(false)
   const [showAddPhoto, setShowAddPhoto] = useState(false)
-  const [photoUrl, setPhotoUrl] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState('')
   const [photoType, setPhotoType] = useState<'front' | 'side' | 'back' | 'other'>('front')
   const [photoCaption, setPhotoCaption] = useState('')
   const [saving, setSaving] = useState(false)
@@ -108,7 +109,7 @@ export function ClientProgress() {
         .select('*')
         .eq('client_id', profile.id)
         .order('taken_at', { ascending: false })
-      setPhotos(pData || [])
+      setPhotos(await withSignedPhotoUrls(pData || []))
     } catch (err) {
       console.error(err)
     } finally {
@@ -124,45 +125,79 @@ export function ClientProgress() {
       if (measurementWeight.trim()) {
         data.body_weight = parseFloat(measurementWeight)
       }
-      await supabase.from('measurements').insert(data)
+      const { error } = await supabase.from('measurements').insert(data)
+      if (error) throw error
       await addActivityEvent(profile.id, null, 'measurement_logged', 'Logged new measurements')
+      await notifyTrainer('measurement_logged', 'New measurement', `${profile.full_name} logged a weight of ${data.body_weight}kg.`)
       setShowAddMeasurement(false)
       setMeasurementWeight('')
       loadData()
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
+      alert(`Failed to save measurement: ${err?.message || 'Unknown error'}`)
     } finally {
       setSaving(false)
     }
   }
 
+  const notifyTrainer = async (type: 'measurement_logged' | 'photo_uploaded', title: string, message: string) => {
+    if (!profile) return
+    const { data: link } = await supabase
+      .from('trainer_client_links')
+      .select('trainer_id')
+      .eq('client_id', profile.id)
+      .eq('status', 'active')
+      .limit(1)
+    if (link?.[0]?.trainer_id) await createNotification(link[0].trainer_id, type, title, message)
+  }
+
+  const handlePhotoSelected = (file: File | null) => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
+    if (file && file.size > 10 * 1024 * 1024) {
+      alert('Photo is too large. Please choose an image under 10 MB.')
+      file = null
+    }
+    setPhotoFile(file)
+    setPhotoPreview(file ? URL.createObjectURL(file) : '')
+  }
+
+  const closePhotoModal = () => {
+    handlePhotoSelected(null)
+    setPhotoCaption('')
+    setPhotoType('front')
+    setShowAddPhoto(false)
+  }
+
   const handleAddPhoto = async () => {
-    if (!profile || !photoUrl.trim()) return
+    if (!profile || !photoFile) return
     setSaving(true)
     try {
-      await supabase.from('progress_photos').insert({
+      const storedPath = await uploadProgressPhoto(profile.id, photoFile)
+      const { error } = await supabase.from('progress_photos').insert({
         client_id: profile.id,
-        photo_url: photoUrl,
+        photo_url: storedPath,
         photo_type: photoType,
         caption: photoCaption || null,
         taken_at: todayISO(),
       })
+      if (error) throw error
       await addActivityEvent(profile.id, null, 'photo_uploaded', 'Uploaded a progress photo')
-      setShowAddPhoto(false)
-      setPhotoUrl('')
-      setPhotoCaption('')
-      setPhotoType('front')
+      await notifyTrainer('photo_uploaded', 'New progress photo', `${profile.full_name} uploaded a progress photo.`)
+      closePhotoModal()
       loadData()
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
+      alert(`Failed to add photo: ${err?.message || 'Unknown error'}`)
     } finally {
       setSaving(false)
     }
   }
 
-  const handleDeletePhoto = async (photoId: string) => {
+  const handleDeletePhoto = async (photo: { id: string; photo_url: string }) => {
     if (!confirm('Delete this photo?')) return
-    await supabase.from('progress_photos').delete().eq('id', photoId)
+    const { error } = await supabase.from('progress_photos').delete().eq('id', photo.id)
+    if (error) alert(`Failed to delete photo: ${error.message}`)
+    else await deleteProgressPhotoFile(photo.photo_url)
     loadData()
   }
 
@@ -174,29 +209,16 @@ export function ClientProgress() {
     )
   }
 
-  // Weight data
-  const weightData = measurements
-    .filter(m => m.body_weight)
-    .map((m, index) => ({
-      week: `Week ${index + 1}`,
-      value: m.body_weight,
-    }))
+  const rangeStart = toLocalISO(addDays(new Date(), -7 * rangeWeeks))
+  const weightPoints = measurements.filter((m) => m.body_weight && m.logged_at.slice(0, 10) >= rangeStart)
+  const weights = weightPoints.map((m) => Number(m.body_weight))
+  const minWeight = weights.length ? Math.min(...weights) : 0
+  const maxWeight = weights.length ? Math.max(...weights) : 0
+  const spread = Math.max(maxWeight - minWeight, 1)
 
   const lastWeight = measurements.filter(m => m.body_weight).pop()?.body_weight
   const firstWeight = measurements.find(m => m.body_weight)?.body_weight
   const weightChange = firstWeight && lastWeight ? lastWeight - firstWeight : null
-
-  // Goals (simulated for MVP)
-  const goals = [
-    { id: 1, title: 'Build upper body strength', exercises: 15, progress: 37, color: 'coral' },
-    { id: 2, title: 'Improve core stability', exercises: 10, progress: 83, color: 'lavender' },
-    { id: 3, title: 'Increase endurance', exercises: 12, progress: 65, color: 'mint' },
-  ]
-
-  const categories = [
-    { id: 'weight', label: 'Weight' },
-    { id: 'goals', label: 'Goals' },
-  ]
 
   return (
     <div className="flex flex-col gap-7">
@@ -219,30 +241,40 @@ export function ClientProgress() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-display text-xl font-semibold text-[#25342d]">Weight progress</h2>
-              <p className="mt-1 text-xs text-[#929990]">Last 8 weeks</p>
+              <p className="mt-1 text-xs text-[#929990]">Last {rangeWeeks} weeks</p>
             </div>
-            <button onClick={() => alert('Time range selector coming soon! Currently showing 8 weeks.')} className="rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a] hover:bg-[#f8f8f4] transition">8 weeks⌄</button>
+            <select
+              value={rangeWeeks}
+              onChange={(e) => setRangeWeeks(Number(e.target.value))}
+              className="rounded-lg border border-[#e5e7dd] bg-white px-3 py-2 text-xs text-[#69746a] outline-none hover:bg-[#f8f8f4]"
+            >
+              {[4, 8, 12, 26, 52].map((w) => (
+                <option key={w} value={w}>{w} weeks</option>
+              ))}
+            </select>
           </div>
-          <div className="mt-8 flex h-44 items-end gap-3 border-b border-[#eceee5] px-2">
-            {measurements.slice(-10).map((m, i) => {
-              const weight = m.body_weight
-              const normalizedWeight = weight ? Math.min(Math.max((weight - 60) / 40 * 100, 20), 95) : 30
-              return (
-                <div key={i} className="flex flex-1 items-end">
-                  <div
-                    className="w-full rounded-t-md bg-[#b9cd69] transition-all hover:bg-[#a5bd55]"
-                    style={{ height: `${normalizedWeight}%` }}
-                  />
-                </div>
-              )
-            })}
-          </div>
-          <div className="mt-3 flex justify-between text-[10px] text-[#a1a8a0]">
-            <span>May</span>
-            <span>Jun</span>
-            <span>Jul</span>
-            <span>Aug</span>
-          </div>
+          {weightPoints.length > 0 ? (
+            <>
+              <div className="mt-8 flex h-44 items-end gap-2 border-b border-[#eceee5] px-2">
+                {weightPoints.map((m) => (
+                  <div key={m.id} className="flex h-full flex-1 items-end" title={`${formatDate(m.logged_at)}: ${m.body_weight}kg`}>
+                    <div
+                      className="w-full rounded-t-md bg-[#b9cd69] transition-all hover:bg-[#a5bd55]"
+                      style={{ height: `${25 + ((Number(m.body_weight) - minWeight) / spread) * 70}%` }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex justify-between text-[10px] text-[#a1a8a0]">
+                <span>{formatDate(weightPoints[0].logged_at)}</span>
+                {weightPoints.length > 1 && <span>{formatDate(weightPoints[weightPoints.length - 1].logged_at)}</span>}
+              </div>
+            </>
+          ) : (
+            <div className="mt-8 flex h-44 items-center justify-center rounded-xl bg-[#f8f8f4]">
+              <p className="text-sm text-[#969f96]">No weight logged in the last {rangeWeeks} weeks</p>
+            </div>
+          )}
           {lastWeight && (
             <div className="mt-6 flex items-center justify-between rounded-xl bg-[#f8f8f4] p-4">
               <div>
@@ -273,15 +305,15 @@ export function ClientProgress() {
           </div>
           {photos.length > 0 ? (
             <div className="mt-6 grid grid-cols-2 gap-4">
-              {photos.slice(0, 4).map((photo) => (
+              {photos.map((photo) => (
                 <div key={photo.id} className="aspect-square bg-[#f8f8f4] rounded-2xl overflow-hidden relative group">
                   <img
-                    src={photo.photo_url}
+                    src={photo.display_url}
                     alt={photo.caption || 'Progress photo'}
                     className="w-full h-full object-cover"
                   />
                   <button
-                    onClick={() => handleDeletePhoto(photo.id)}
+                    onClick={() => handleDeletePhoto(photo)}
                     className="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-white/80 text-[#8b4a4a] opacity-0 transition-opacity group-hover:opacity-100"
                   >
                     <X className="size-4" />
@@ -306,13 +338,15 @@ export function ClientProgress() {
         </div>
         <div className="mt-6 space-y-3">
           {measurements.length > 0 ? (
-            [...measurements].reverse().slice(0, 5).map((m) => (
+            [...measurements].reverse().map((m) => (
               <div key={m.id} className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
                 <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf3d5] text-[#718b33]">
                   <TrendingUp className="size-4" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-[#3d4b40]">{m.body_weight}kg</p>
+                  <p className="text-sm font-semibold text-[#3d4b40]">
+                    {[m.body_weight && `${m.body_weight}kg`, m.chest && `Chest ${m.chest}cm`, m.waist && `Waist ${m.waist}cm`].filter(Boolean).join(' · ') || 'Measurement'}
+                  </p>
                   <p className="text-xs text-[#969f96]">{formatDate(m.logged_at)}</p>
                 </div>
               </div>
@@ -369,14 +403,24 @@ export function ClientProgress() {
             <h2 className="font-display text-xl font-semibold text-[#25342d] mb-6">Add progress photo</h2>
             <div className="space-y-4">
               <div>
-                <label className="label">Photo URL</label>
-                <input
-                  type="url"
-                  value={photoUrl}
-                  onChange={(e) => setPhotoUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="input"
-                />
+                <label className="label">Photo</label>
+                <label className="mt-1 flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-dashed border-[#e5e7dd] bg-[#f8f8f4] p-4 text-center hover:border-[#c0d568]">
+                  {photoPreview ? (
+                    <img src={photoPreview} alt="Selected photo" className="max-h-48 rounded-lg object-contain" />
+                  ) : (
+                    <>
+                      <Camera className="size-6 text-[#969f96]" />
+                      <span className="text-xs text-[#69746a]">Take a photo or choose from your device</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handlePhotoSelected(e.target.files?.[0] || null)}
+                  />
+                </label>
+                {photoFile && <p className="mt-1 text-[10px] text-[#969f96]">{photoFile.name}</p>}
               </div>
               <div>
                 <label className="label">Type</label>
@@ -407,14 +451,14 @@ export function ClientProgress() {
             </div>
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => setShowAddPhoto(false)}
+                onClick={closePhotoModal}
                 className="btn-secondary flex-1"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddPhoto}
-                disabled={saving || !photoUrl.trim()}
+                disabled={saving || !photoFile}
                 className="btn-primary flex-1"
               >
                 {saving ? 'Uploading...' : 'Upload'}
