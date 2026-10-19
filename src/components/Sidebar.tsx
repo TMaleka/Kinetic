@@ -1,4 +1,6 @@
-import { LayoutDashboard, Users, Dumbbell, TrendingUp, UserRound, Settings, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { LayoutDashboard, Users, Dumbbell, TrendingUp, UserRound, Settings } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getInitials } from '../lib/queries';
@@ -50,6 +52,17 @@ function Avatar({ initials, className = '' }: { initials: string; className?: st
 export default function Sidebar({ role, screen, setScreen }: SidebarProps) {
   const { profile } = useAuth()
   const items = role === 'trainer' ? nav : clientNav;
+  const [clientCount, setClientCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (role !== 'trainer' || !profile) return
+    supabase
+      .from('trainer_client_links')
+      .select('id', { count: 'exact', head: true })
+      .eq('trainer_id', profile.id)
+      .eq('status', 'active')
+      .then(({ count }) => setClientCount(count ?? 0))
+  }, [role, profile])
   
   const initials = profile ? getInitials(profile.full_name) : '?'
   const userName = profile?.full_name || 'User'
@@ -70,9 +83,9 @@ export default function Sidebar({ role, screen, setScreen }: SidebarProps) {
           >
             <Icon className="size-[17px]" />
             {label}
-            {id === 'clients' && (
+            {id === 'clients' && clientCount !== null && clientCount > 0 && (
               <span className="ml-auto grid size-5 place-items-center rounded-md bg-[#e5edbf] text-[10px] font-bold text-[#52602f]">
-                4
+                {clientCount}
               </span>
             )}
           </button>

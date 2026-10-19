@@ -73,6 +73,9 @@ Run the migrations in order:
 1. `001_initial_schema.sql` - Core tables (profiles, sessions, plans, etc.)
 2. `002_notifications.sql` - Notification system
 3. `003_invitations.sql` - Client invitation system
+4. `004_onboarding.sql` - Client goals and trainer goal reviews
+5. `005_template_plans.sql` - Allows unassigned (template) workout plans
+6. `006_audit_fixes.sql` - `onboarding_completed` column, trainer goal review permissions, cross-user notifications
 
 ### Additional Tables for Onboarding
 ```sql

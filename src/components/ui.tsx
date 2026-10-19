@@ -141,7 +141,7 @@ export function Spinner({ size = 24 }: { size?: number }) {
   return (
     <div
       style={{ width: size, height: size }}
-      className="border-3 border-primary-200 border-t-primary-600 rounded-full animate-spin"
+      className="border-[3px] border-[#e5e7dd] border-t-[#25342d] rounded-full animate-spin"
     />
   )
 }

@@ -4,7 +4,7 @@ import { ChevronRight, CheckCircle2, XCircle, PlayCircle, Calendar } from 'lucid
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { formatDate, todayISO, toLocalISO, addDays } from '../../lib/queries'
+import { formatDate, todayISO, toLocalISO, addDays, effectiveStatus } from '../../lib/queries'
 
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
@@ -112,15 +112,15 @@ export function ClientWorkouts() {
         .gte('scheduled_date', toLocalISO(startOfWeek))
         .order('scheduled_date', { ascending: true })
 
-      console.log('Client sessions query result:', data)
-      setSessions(data || [])
+      const withStatus = (data || []).map((s) => ({ ...s, status: effectiveStatus(s) }))
+      setSessions(withStatus)
       
       // Build week data
       const week: any[] = []
       for (let i = 0; i < 7; i++) {
         const date = addDays(startOfWeek, i)
         const dateStr = toLocalISO(date)
-        const daySession = data?.find((s) => s.scheduled_date === dateStr)
+        const daySession = withStatus.find((s) => s.scheduled_date === dateStr)
         week.push({
           day: DAYS[i],
           date: dateStr,
@@ -189,16 +189,16 @@ export function ClientWorkouts() {
                 {day.day}
               </p>
               {day.session ? (
-                <div className="mt-2">
+                <Link to={`/app/workouts/${day.session.id}`} title={day.session.title} className="mt-2 block">
                   <div className={`grid size-8 mx-auto place-items-center rounded-full ${
                     day.session.status === 'completed' ? 'bg-[#edf3d5] text-[#718b33]' :
                     day.session.status === 'missed' ? 'bg-[#f5d5d5] text-[#8b4a4a]' :
                     day.session.status === 'in_progress' ? 'bg-[#f7eadb] text-[#ad784b]' :
                     'bg-[#f0f1eb] text-[#8d978d]'
                   }`}>
-                    {statusIcon(day.session.status)}
+                    {statusIcon(day.session.status) || <Calendar className="size-4" />}
                   </div>
-                </div>
+                </Link>
               ) : (
                 <div className="mt-2">
                   <span className="text-[#d4d8d2]">—</span>
@@ -283,7 +283,7 @@ export function ClientWorkouts() {
           </div>
           <div className="mt-6 space-y-3">
             {missed.map((s) => (
-              <div key={s.id} className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4 opacity-50">
+              <Link key={s.id} to={`/app/workouts/${s.id}`} className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4 opacity-60 hover:opacity-100 transition">
                 <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f5d5d5] text-[#8b4a4a]">
                   <XCircle className="size-4" />
                 </div>
@@ -292,7 +292,7 @@ export function ClientWorkouts() {
                   <p className="text-xs text-[#969f96]">{formatDate(s.scheduled_date)}</p>
                 </div>
                 <span className="badge bg-[#f5d5d5] text-[#8b4a4a]">Missed</span>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

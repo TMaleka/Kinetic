@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, ChevronRight, TrendingUp, Flame, Dumbbell, Plus, Target } from 'lucide-react'
+import { ChevronRight, TrendingUp, Flame, Dumbbell, Plus, Target, Scale } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { formatDate, formatRelative, fetchClientActivity, addActivityEvent, scheduleSessionsFromPlan, todayISO, toLocalISO, addDays } from '../../lib/queries'
+import { formatDate, formatRelative, fetchClientActivity, addActivityEvent, scheduleSessionsFromPlan, todayISO, effectiveStatus, adherencePercent, computeStreak } from '../../lib/queries'
+import { createNotification } from '../../lib/notifications'
+import { WeeklyActivityChart } from '../../components/WeeklyActivityChart'
 
 function StatCard({ label, value, detail, icon: Icon, accent = 'lime' }: { label: string; value: string; detail: string; icon: any; accent?: 'lime' | 'lavender' | 'peach' }) {
   const bg = accent === 'lime' ? 'bg-[#edf3d5]' : accent === 'lavender' ? 'bg-[#eee8f3]' : 'bg-[#f7eadb]'
@@ -126,20 +128,33 @@ export function ClientDetail() {
     setScheduling(true)
     try {
       // Update plan to assign to client
-      const { error: updateError } = await supabase
+      const { data: updatedPlan, error: updateError } = await supabase
         .from('workout_plans')
         .update({ client_id: clientId })
         .eq('id', selectedPlan)
+        .select('id')
+        .maybeSingle()
 
       if (updateError) throw updateError
+      if (!updatedPlan) throw new Error('Plan could not be updated (not found or permission denied)')
 
       // Schedule sessions if requested
       if (scheduleSessions) {
         const result = await scheduleSessionsFromPlan(selectedPlan, clientId, profile.id, startDate)
         if (!result.success) {
           console.error('Failed to schedule sessions:', result.message)
+          alert(`Plan assigned, but sessions could not be scheduled, so the client won't see any workouts yet. Error: ${result.message}`)
         }
       }
+
+      const planTitle = availablePlans.find((p) => p.id === selectedPlan)?.title || 'a new workout plan'
+      await createNotification(
+        clientId,
+        'plan_assigned',
+        'New workout plan',
+        `${profile.full_name || 'Your trainer'} assigned you "${planTitle}".`,
+        { plan_id: selectedPlan },
+      )
 
       // Log activity
       await addActivityEvent(
@@ -155,6 +170,7 @@ export function ClientDetail() {
       loadData()
     } catch (err) {
       console.error(err)
+      alert(`Failed to assign plan: ${(err as { message?: string })?.message || 'Unknown error'}`)
     } finally {
       setScheduling(false)
     }
@@ -183,9 +199,10 @@ export function ClientDetail() {
   }
 
   const completedSessions = sessions.filter((s) => s.status === 'completed').length
-  const adherenceRate = sessions.length > 0
-    ? Math.round((completedSessions / sessions.length) * 100)
-    : 0
+  const dueSessions = sessions.filter((s) => s.scheduled_date <= todayISO()).length
+  const upcomingSessions = sessions.filter((s) => effectiveStatus(s) === 'scheduled' || effectiveStatus(s) === 'in_progress').length
+  const adherenceRate = adherencePercent(sessions)
+  const streak = computeStreak(sessions)
 
   const weightData = measurements
     .filter((m) => m.body_weight != null)
@@ -208,9 +225,9 @@ export function ClientDetail() {
 
   return (
     <div className="flex flex-col gap-7">
-      <button onClick={() => window.history.back()} className="flex w-fit items-center gap-2 text-xs font-semibold text-[#7f927d]">
+      <Link to="/trainer/clients" className="flex w-fit items-center gap-2 text-xs font-semibold text-[#7f927d]">
         ← Back to clients
-      </button>
+      </Link>
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
         <div className="flex items-center gap-4">
           <div className={`grid size-16 shrink-0 place-items-center rounded-full text-lg font-semibold ${
@@ -236,46 +253,30 @@ export function ClientDetail() {
             </p>
           </div>
         </div>
-        <button
-          onClick={handleOpenAssignPlan}
-          className="flex w-fit items-center gap-2 rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white"
-        >
-          <Plus className="size-4" />Assign workout
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setShowAddMeasurement(true)}
+            className="flex w-fit items-center gap-2 rounded-xl border border-[#e5e7dd] bg-white px-4 py-3 text-xs font-semibold text-[#596359] hover:bg-[#f8f8f4]"
+          >
+            <Scale className="size-4" />Log measurement
+          </button>
+          <button
+            onClick={handleOpenAssignPlan}
+            className="flex w-fit items-center gap-2 rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white"
+          >
+            <Plus className="size-4" />Assign workout
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Weekly adherence" value={`${adherenceRate}%`} detail={adherenceRate > 70 ? '+12% vs last month' : 'Needs improvement'} icon={TrendingUp} />
-        <StatCard label="Current streak" value={`${sessions.length} days`} detail="Personal best" icon={Flame} accent="peach" />
-        <StatCard label="Strength score" value="78" detail="+8 points this month" icon={Dumbbell} accent="lavender" />
+        <StatCard label="Adherence" value={`${adherenceRate}%`} detail={`${completedSessions} of ${dueSessions} due sessions completed`} icon={TrendingUp} />
+        <StatCard label="Current streak" value={`${streak} ${streak === 1 ? 'day' : 'days'}`} detail="Consecutive days with a completed workout" icon={Flame} accent="peach" />
+        <StatCard label="Completed workouts" value={String(completedSessions)} detail={`${upcomingSessions} upcoming`} icon={Dumbbell} accent="lavender" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
-        <section className="card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Progress overview</h2>
-              <p className="mt-1 text-xs text-[#929990]">Last 8 weeks</p>
-            </div>
-            <button className="rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a]">8 weeks⌄</button>
-          </div>
-          <div className="mt-8 flex h-44 items-end gap-3 border-b border-[#eceee5] px-2">
-            {[38, 48, 43, 65, 58, 72, 68, 83, 78, 92].map((v, i) => (
-              <div key={i} className="flex flex-1 items-end">
-                <div
-                  className="w-full rounded-t-md bg-[#b9cd69] transition-all hover:bg-[#a5bd55]"
-                  style={{ height: `${v}%` }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex justify-between text-[10px] text-[#a1a8a0]">
-            <span>May</span>
-            <span>Jun</span>
-            <span>Jul</span>
-            <span>Aug</span>
-          </div>
-        </section>
+        <WeeklyActivityChart sessions={sessions} />
 
         <section className="card p-6">
           <div className="flex items-center justify-between">
@@ -300,10 +301,10 @@ export function ClientDetail() {
             )}
             <div className="flex items-center justify-between rounded-xl bg-[#f8f8f4] p-4">
               <div>
-                <p className="text-xs text-[#969f96]">Workouts</p>
-                <p className="text-lg font-semibold text-[#25342d]">{sessions.length}</p>
+                <p className="text-xs text-[#969f96]">Workouts completed</p>
+                <p className="text-lg font-semibold text-[#25342d]">{completedSessions}</p>
               </div>
-              <span className="text-xs font-semibold text-[#718b33]">+{sessions.length > 0 ? sessions.length : 0}</span>
+              <span className="text-xs font-semibold text-[#718b33]">{upcomingSessions} upcoming</span>
             </div>
             <div className="flex items-center justify-between rounded-xl bg-[#f8f8f4] p-4">
               <div>
@@ -319,6 +320,39 @@ export function ClientDetail() {
           </div>
         </section>
       </div>
+
+      <section className="card p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-xl font-semibold text-[#25342d]">Assigned plans</h2>
+            <p className="mt-1 text-xs text-[#929990]">Workout programmes assigned to this client</p>
+          </div>
+        </div>
+        {plans.length > 0 ? (
+          <div className="mt-6 space-y-3">
+            {plans.map((plan) => (
+              <Link
+                key={plan.id}
+                to={`/trainer/plans/${plan.id}/edit`}
+                className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4 hover:bg-[#f8f8f4] transition"
+              >
+                <div className="grid size-10 place-items-center rounded-xl bg-[#edf3d5] text-[#718b33]">
+                  <Dumbbell className="size-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-[#3d4b40]">{plan.title}</p>
+                  <p className="text-xs text-[#969f96]">Assigned {formatDate(plan.updated_at || plan.created_at)}</p>
+                </div>
+                <ChevronRight className="size-4 text-[#aab2a8]" />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-6 flex items-center justify-center rounded-xl bg-[#f8f8f4] p-8">
+            <p className="text-sm text-[#969f96]">No plans assigned yet. Use "Assign workout" above.</p>
+          </div>
+        )}
+      </section>
 
       {photos.length > 0 && (
         <section className="card p-6">
@@ -351,7 +385,7 @@ export function ClientDetail() {
             </div>
           </div>
           <div className="mt-6 space-y-3">
-            {sessions.slice(0, 5).map((s) => (
+            {sessions.slice(0, 5).map((session) => ({ ...session, status: effectiveStatus(session) })).map((s) => (
               <div key={s.id} className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
                 <div className={`grid size-10 place-items-center rounded-xl ${
                   s.status === 'completed' ? 'bg-[#edf3d5] text-[#718b33]' :
@@ -371,7 +405,7 @@ export function ClientDetail() {
                   s.status === 'missed' ? 'badge-error' :
                   'bg-[#f0f1eb] text-[#8d978d]'
                 }`}>
-                  {s.status}
+                  {s.status.replace('_', ' ')}
                 </span>
               </div>
             ))}
@@ -465,7 +499,12 @@ export function ClientDetail() {
                     if (measurementWaist.trim()) data.waist = parseFloat(measurementWaist)
                     
                     if (Object.keys(data).length > 1) {
-                      await supabase.from('measurements').insert(data)
+                      const { error } = await supabase.from('measurements').insert(data)
+                      if (error) {
+                        alert(`Failed to save measurement: ${error.message}`)
+                        return
+                      }
+                      await addActivityEvent(clientId!, profile?.id || null, 'measurement_logged', 'Trainer logged new measurements')
                       setShowAddMeasurement(false)
                       setMeasurementWeight('')
                       setMeasurementChest('')
@@ -496,7 +535,7 @@ export function ClientDetail() {
                   No workout plans available. Create one first.
                 </p>
                 <Link
-                  to="/trainer/plans"
+                  to="/trainer/plans/new"
                   className="btn-primary"
                   onClick={() => setShowAssignPlan(false)}
                 >

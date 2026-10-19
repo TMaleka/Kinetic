@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, ChevronRight, Dumbbell, User, Calendar } from 'lucide-react'
+import { Plus, ChevronRight, Dumbbell, User, Calendar, Trash2 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
@@ -86,7 +86,8 @@ export function WorkoutPlans() {
 
   const handleDelete = async (planId: string) => {
     if (!confirm('Delete this plan? This cannot be undone.')) return
-    await supabase.from('workout_plans').delete().eq('id', planId)
+    const { error } = await supabase.from('workout_plans').delete().eq('id', planId)
+    if (error) alert(`Failed to delete plan: ${error.message}`)
     loadPlans()
   }
 
@@ -140,11 +141,13 @@ export function WorkoutPlans() {
                       <Calendar className="size-3" />
                       {plan.days?.[0]?.count ?? 0} days
                     </div>
-                    {plan.client && (
+                    {plan.client ? (
                       <div className="flex items-center gap-2 text-xs text-[#969f96]">
                         <User className="size-3" />
                         {plan.client.full_name}
                       </div>
+                    ) : (
+                      <span className="text-xs text-[#969f96]">Template (unassigned)</span>
                     )}
                     <span className={`badge ${
                       plan.status === 'active' ? 'badge-lime' :
@@ -155,7 +158,20 @@ export function WorkoutPlans() {
                     </span>
                   </div>
                 </div>
-                <ChevronRight className="size-4 text-[#aab2a8] flex-shrink-0 ml-4" />
+                <div className="ml-4 flex flex-shrink-0 items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleDelete(plan.id)
+                    }}
+                    aria-label="Delete plan"
+                    className="grid size-8 place-items-center rounded-lg text-[#8b4a4a] hover:bg-[#f5d5d5]"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                  <ChevronRight className="size-4 text-[#aab2a8]" />
+                </div>
               </div>
             </Link>
           ))}
