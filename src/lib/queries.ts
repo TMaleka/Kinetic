@@ -437,3 +437,51 @@ export function computeStreak(sessions: { status: string; scheduled_date: string
   }
   return streak
 }
+
+const PHOTO_BUCKET = 'progress-photos'
+const STORAGE_PREFIX = 'storage:'
+
+export async function uploadProgressPhoto(clientId: string, file: File): Promise<string> {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
+  const path = `${clientId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+  const { error } = await supabase.storage.from(PHOTO_BUCKET).upload(path, file, {
+    contentType: file.type || undefined,
+    upsert: false,
+  })
+  if (error) throw error
+  return `${STORAGE_PREFIX}${path}`
+}
+
+export async function deleteProgressPhotoFile(photoUrl: string) {
+  if (!photoUrl.startsWith(STORAGE_PREFIX)) return
+  const { error } = await supabase.storage.from(PHOTO_BUCKET).remove([photoUrl.slice(STORAGE_PREFIX.length)])
+  if (error) console.error('Failed to delete photo file:', error)
+}
+
+// Replaces "storage:" paths with short-lived signed URLs; external URLs are kept as-is.
+export async function withSignedPhotoUrls<T extends { photo_url: string }>(photos: T[]): Promise<(T & { display_url: string })[]> {
+  const paths = photos.filter((p) => p.photo_url.startsWith(STORAGE_PREFIX)).map((p) => p.photo_url.slice(STORAGE_PREFIX.length))
+  const signed = new Map<string, string>()
+  if (paths.length) {
+    const { data, error } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(paths, 60 * 60)
+    if (error) console.error('Failed to sign photo URLs:', error)
+    ;(data || []).forEach((d) => d.path && d.signedUrl && signed.set(d.path, d.signedUrl))
+  }
+  return photos.map((p) => ({
+    ...p,
+    display_url: p.photo_url.startsWith(STORAGE_PREFIX) ? signed.get(p.photo_url.slice(STORAGE_PREFIX.length)) || '' : p.photo_url,
+  }))
+}
+
+export async function sendInvitationEmail(invitationId: string): Promise<{ success: boolean; message?: string }> {
+  const { data, error } = await supabase.functions.invoke('send-invite', { body: { invitationId } })
+  if (error) {
+    let message = error.message
+    try {
+      const body = await (error as { context?: Response }).context?.json()
+      if (body?.error) message = body.error
+    } catch { /* keep default */ }
+    return { success: false, message }
+  }
+  return data?.sent ? { success: true } : { success: false, message: data?.error || 'Failed to send email' }
+}

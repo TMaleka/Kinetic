@@ -4,7 +4,7 @@ import { Plus, Search, UserPlus, ChevronRight, Mail, Copy, Check } from 'lucide-
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { createInvitation, fetchTrainerInvitations, cancelInvitation, effectiveStatus, todayISO } from '../../lib/queries'
+import { createInvitation, fetchTrainerInvitations, cancelInvitation, effectiveStatus, todayISO, sendInvitationEmail } from '../../lib/queries'
 
 type ClientRow = {
   id: string
@@ -31,6 +31,8 @@ export function TrainerClients() {
   const [addError, setAddError] = useState('')
   const [invitations, setInvitations] = useState<any[]>([])
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null)
+  const [inviteNotice, setInviteNotice] = useState('')
   const [useMockData] = useState(false) // Set to false for production
 
   useEffect(() => {
@@ -211,11 +213,21 @@ export function TrainerClients() {
         return
       }
 
+      const invitedEmail = clientEmail.trim()
       setShowAdd(false)
       setClientEmail('')
       setClientGoals('')
       setAddError('')
       loadInvitations()
+
+      if (result.invitationId) {
+        const emailResult = await sendInvitationEmail(result.invitationId)
+        setInviteNotice(
+          emailResult.success
+            ? `Invitation emailed to ${invitedEmail}.`
+            : `Invitation created, but the email could not be sent (${emailResult.message}). Copy the code below and share it yourself.`,
+        )
+      }
     } catch (err) {
       console.error('Invitation error:', err)
       setAddError(err instanceof Error ? err.message : 'Failed to send invitation')
@@ -233,6 +245,17 @@ export function TrainerClients() {
     }
     setCopiedCode(code)
     setTimeout(() => setCopiedCode(null), 2000)
+  }
+
+  const handleResendEmail = async (invitation: { id: string; email: string }) => {
+    setSendingEmail(invitation.id)
+    const result = await sendInvitationEmail(invitation.id)
+    setSendingEmail(null)
+    setInviteNotice(
+      result.success
+        ? `Invitation emailed to ${invitation.email}.`
+        : `Could not email ${invitation.email}: ${result.message}`,
+    )
   }
 
   const handleCancelInvitation = async (invitationId: string) => {
@@ -321,6 +344,13 @@ export function TrainerClients() {
           ))}
         </div>
       </div>
+      {inviteNotice && (
+        <div className="flex items-start justify-between gap-4 rounded-xl bg-[#edf3d5] px-4 py-3 text-sm text-[#4d604c]">
+          <span>{inviteNotice}</span>
+          <button onClick={() => setInviteNotice('')} className="text-xs font-semibold">Dismiss</button>
+        </div>
+      )}
+
       {/* Pending Invitations */}
       {invitations.filter((i) => i.status === 'pending').length > 0 && (
         <section className="card p-6">
@@ -348,6 +378,14 @@ export function TrainerClients() {
                   >
                     {copiedCode === invitation.invite_code ? <Check size={14} /> : <Copy size={14} />}
                     {copiedCode === invitation.invite_code ? 'Copied' : 'Copy'}
+                  </button>
+                  <button
+                    onClick={() => handleResendEmail(invitation)}
+                    disabled={sendingEmail === invitation.id}
+                    className="flex items-center gap-1 rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a] hover:bg-[#f8f8f4]"
+                  >
+                    <Mail size={14} />
+                    {sendingEmail === invitation.id ? 'Sending...' : 'Email'}
                   </button>
                   <button
                     onClick={() => handleCancelInvitation(invitation.id)}
@@ -426,7 +464,7 @@ export function TrainerClients() {
                   className="input"
                 />
                 <p className="text-xs text-[#969f96] mt-2">
-                  This creates an invite code. Share it with your client — once they sign up with this email, the invitation appears on their Profile page to accept.
+                  We'll email them an invite code. Once they sign up with this email, the invitation appears on their Profile page to accept.
                 </p>
               </div>
               {addError && (

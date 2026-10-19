@@ -4,7 +4,7 @@ import { ChevronRight, TrendingUp, Flame, Dumbbell, Plus, Target, Scale } from '
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { formatDate, formatRelative, fetchClientActivity, addActivityEvent, scheduleSessionsFromPlan, todayISO, effectiveStatus, adherencePercent, computeStreak } from '../../lib/queries'
+import { formatDate, formatRelative, fetchClientActivity, addActivityEvent, scheduleSessionsFromPlan, todayISO, effectiveStatus, adherencePercent, computeStreak, withSignedPhotoUrls } from '../../lib/queries'
 import { createNotification } from '../../lib/notifications'
 import { WeeklyActivityChart } from '../../components/WeeklyActivityChart'
 
@@ -98,7 +98,7 @@ export function ClientDetail() {
       setLink(linkData)
       setSessions(sessionData || [])
       setMeasurements(measurementData || [])
-      setPhotos(photoData || [])
+      setPhotos(await withSignedPhotoUrls(photoData || []))
       setPlans(planData || [])
       setActivity(activityData || [])
     } catch (err) {
@@ -366,7 +366,7 @@ export function ClientDetail() {
             {photos.slice(0, 4).map((photo) => (
               <div key={photo.id} className="aspect-square bg-[#f8f8f4] rounded-2xl overflow-hidden">
                 <img
-                  src={photo.photo_url}
+                  src={photo.display_url}
                   alt={photo.caption || 'Progress photo'}
                   className="w-full h-full object-cover"
                 />

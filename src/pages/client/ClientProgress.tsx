@@ -3,7 +3,7 @@ import { Plus, Camera, X, ChevronRight, Target, TrendingUp } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { formatDate, addActivityEvent, todayISO, toLocalISO, addDays } from '../../lib/queries'
+import { formatDate, addActivityEvent, todayISO, toLocalISO, addDays, uploadProgressPhoto, deleteProgressPhotoFile, withSignedPhotoUrls } from '../../lib/queries'
 import { createNotification } from '../../lib/notifications'
 
 
@@ -15,7 +15,8 @@ export function ClientProgress() {
   const [loading, setLoading] = useState(true)
   const [showAddMeasurement, setShowAddMeasurement] = useState(false)
   const [showAddPhoto, setShowAddPhoto] = useState(false)
-  const [photoUrl, setPhotoUrl] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState('')
   const [photoType, setPhotoType] = useState<'front' | 'side' | 'back' | 'other'>('front')
   const [photoCaption, setPhotoCaption] = useState('')
   const [saving, setSaving] = useState(false)
@@ -108,7 +109,7 @@ export function ClientProgress() {
         .select('*')
         .eq('client_id', profile.id)
         .order('taken_at', { ascending: false })
-      setPhotos(pData || [])
+      setPhotos(await withSignedPhotoUrls(pData || []))
     } catch (err) {
       console.error(err)
     } finally {
@@ -150,13 +151,31 @@ export function ClientProgress() {
     if (link?.[0]?.trainer_id) await createNotification(link[0].trainer_id, type, title, message)
   }
 
+  const handlePhotoSelected = (file: File | null) => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
+    if (file && file.size > 10 * 1024 * 1024) {
+      alert('Photo is too large. Please choose an image under 10 MB.')
+      file = null
+    }
+    setPhotoFile(file)
+    setPhotoPreview(file ? URL.createObjectURL(file) : '')
+  }
+
+  const closePhotoModal = () => {
+    handlePhotoSelected(null)
+    setPhotoCaption('')
+    setPhotoType('front')
+    setShowAddPhoto(false)
+  }
+
   const handleAddPhoto = async () => {
-    if (!profile || !photoUrl.trim()) return
+    if (!profile || !photoFile) return
     setSaving(true)
     try {
+      const storedPath = await uploadProgressPhoto(profile.id, photoFile)
       const { error } = await supabase.from('progress_photos').insert({
         client_id: profile.id,
-        photo_url: photoUrl,
+        photo_url: storedPath,
         photo_type: photoType,
         caption: photoCaption || null,
         taken_at: todayISO(),
@@ -164,10 +183,7 @@ export function ClientProgress() {
       if (error) throw error
       await addActivityEvent(profile.id, null, 'photo_uploaded', 'Uploaded a progress photo')
       await notifyTrainer('photo_uploaded', 'New progress photo', `${profile.full_name} uploaded a progress photo.`)
-      setShowAddPhoto(false)
-      setPhotoUrl('')
-      setPhotoCaption('')
-      setPhotoType('front')
+      closePhotoModal()
       loadData()
     } catch (err: any) {
       console.error(err)
@@ -177,10 +193,11 @@ export function ClientProgress() {
     }
   }
 
-  const handleDeletePhoto = async (photoId: string) => {
+  const handleDeletePhoto = async (photo: { id: string; photo_url: string }) => {
     if (!confirm('Delete this photo?')) return
-    const { error } = await supabase.from('progress_photos').delete().eq('id', photoId)
+    const { error } = await supabase.from('progress_photos').delete().eq('id', photo.id)
     if (error) alert(`Failed to delete photo: ${error.message}`)
+    else await deleteProgressPhotoFile(photo.photo_url)
     loadData()
   }
 
@@ -291,12 +308,12 @@ export function ClientProgress() {
               {photos.map((photo) => (
                 <div key={photo.id} className="aspect-square bg-[#f8f8f4] rounded-2xl overflow-hidden relative group">
                   <img
-                    src={photo.photo_url}
+                    src={photo.display_url}
                     alt={photo.caption || 'Progress photo'}
                     className="w-full h-full object-cover"
                   />
                   <button
-                    onClick={() => handleDeletePhoto(photo.id)}
+                    onClick={() => handleDeletePhoto(photo)}
                     className="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-white/80 text-[#8b4a4a] opacity-0 transition-opacity group-hover:opacity-100"
                   >
                     <X className="size-4" />
@@ -386,14 +403,24 @@ export function ClientProgress() {
             <h2 className="font-display text-xl font-semibold text-[#25342d] mb-6">Add progress photo</h2>
             <div className="space-y-4">
               <div>
-                <label className="label">Photo URL</label>
-                <input
-                  type="url"
-                  value={photoUrl}
-                  onChange={(e) => setPhotoUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="input"
-                />
+                <label className="label">Photo</label>
+                <label className="mt-1 flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-dashed border-[#e5e7dd] bg-[#f8f8f4] p-4 text-center hover:border-[#c0d568]">
+                  {photoPreview ? (
+                    <img src={photoPreview} alt="Selected photo" className="max-h-48 rounded-lg object-contain" />
+                  ) : (
+                    <>
+                      <Camera className="size-6 text-[#969f96]" />
+                      <span className="text-xs text-[#69746a]">Take a photo or choose from your device</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handlePhotoSelected(e.target.files?.[0] || null)}
+                  />
+                </label>
+                {photoFile && <p className="mt-1 text-[10px] text-[#969f96]">{photoFile.name}</p>}
               </div>
               <div>
                 <label className="label">Type</label>
@@ -424,14 +451,14 @@ export function ClientProgress() {
             </div>
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => setShowAddPhoto(false)}
+                onClick={closePhotoModal}
                 className="btn-secondary flex-1"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddPhoto}
-                disabled={saving || !photoUrl.trim()}
+                disabled={saving || !photoFile}
                 className="btn-primary flex-1"
               >
                 {saving ? 'Uploading...' : 'Upload'}
