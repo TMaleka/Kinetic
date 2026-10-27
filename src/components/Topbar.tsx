@@ -37,11 +37,11 @@ const HELP: Record<Role, { title: string; body: string }[]> = {
 function Logo() {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="grid size-8 place-items-center rounded-[11px] bg-[#25342d] text-[#e3f2af]">
+      <div className="grid size-8 place-items-center rounded-[11px] bg-[#ff4f1f] text-[#ffd23f]">
         <Sparkles className="size-4" />
       </div>
-      <span className="font-display text-[19px] font-semibold tracking-tight text-[#25342d]">
-        kinetic<span className="text-[#91a947]">.</span>
+      <span className="font-display text-[19px] font-semibold tracking-tight text-[#1c1446]">
+        kinetic<span className="text-[#ff4f1f]">.</span>
       </span>
     </div>
   );
@@ -49,7 +49,7 @@ function Logo() {
 
 function Avatar({ initials, className = '' }: { initials: string; className?: string }) {
   return (
-    <div className={`grid size-9 shrink-0 place-items-center rounded-full bg-[#e1d8ea] text-xs font-semibold text-[#4b3f58] ${className}`}>
+    <div className={`grid size-9 shrink-0 place-items-center rounded-full bg-[#ddd6fe] text-xs font-semibold text-[#5b21b6] ${className}`}>
       {initials}
     </div>
   );
@@ -111,17 +111,17 @@ export default function Topbar({ role, setScreen }: TopbarProps) {
         <div className="lg:hidden">
           <Logo />
         </div>
-        <div className="hidden items-center gap-2 text-xs text-[#9aa096] md:flex">
+        <div className="hidden items-center gap-2 text-xs text-[#94a3b8] md:flex">
           <span>Workspace</span>
           <ChevronRight className="size-3" />
-          <span className="text-[#4f594e]">{role === 'trainer' ? 'Trainer overview' : 'My space'}</span>
+          <span className="text-[#334155]">{role === 'trainer' ? 'Trainer overview' : 'My space'}</span>
         </div>
       </div>
       <div className="flex items-center gap-3">
         <button
           onClick={() => setShowHelp(true)}
           aria-label="Help"
-          className="hidden size-9 place-items-center rounded-full border border-[#e4e6dc] text-[#768076] hover:bg-[#eef0e7] sm:grid"
+          className="hidden size-9 place-items-center rounded-full border border-[#f3dccf] text-[#64748b] hover:bg-[#ffe6d8] sm:grid"
         >
           <CircleHelp className="size-4" />
         </button>
@@ -129,11 +129,11 @@ export default function Topbar({ role, setScreen }: TopbarProps) {
           <button
             onClick={() => setShowNotifications((v) => !v)}
             aria-label="Notifications"
-            className="relative grid size-9 place-items-center rounded-full border border-[#e4e6dc] text-[#768076] hover:bg-[#eef0e7]"
+            className="relative grid size-9 place-items-center rounded-full border border-[#f3dccf] text-[#64748b] hover:bg-[#ffe6d8]"
           >
             <Bell className="size-4" />
             {unreadCount > 0 && (
-              <span className="absolute -right-1 -top-1 grid min-w-[16px] place-items-center rounded-full bg-[#25342d] px-1 text-[9px] font-bold text-white">
+              <span className="absolute -right-1 -top-1 grid min-w-[16px] place-items-center rounded-full bg-[#ff4f1f] px-1 text-[9px] font-bold text-white">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -141,16 +141,16 @@ export default function Topbar({ role, setScreen }: TopbarProps) {
           {showNotifications && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-              <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-[#e5e7dd] bg-white shadow-xl">
-                <div className="flex items-center justify-between border-b border-[#eceee5] p-4">
-                  <h3 className="font-display text-sm font-semibold text-[#25342d]">Notifications</h3>
+              <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-[#f3dccf] bg-white shadow-xl">
+                <div className="flex items-center justify-between border-b border-[#f1e4da] p-4">
+                  <h3 className="font-display text-sm font-semibold text-[#1c1446]">Notifications</h3>
                   <div className="flex items-center gap-3">
                     {unreadCount > 0 && (
-                      <button onClick={handleMarkAllRead} className="text-xs font-semibold text-[#8aa143]">
+                      <button onClick={handleMarkAllRead} className="text-xs font-semibold text-[#7c3aed]">
                         Mark all read
                       </button>
                     )}
-                    <button onClick={() => setShowNotifications(false)} aria-label="Close" className="text-[#9aa096]">
+                    <button onClick={() => setShowNotifications(false)} aria-label="Close" className="text-[#94a3b8]">
                       <X className="size-4" />
                     </button>
                   </div>
@@ -161,40 +161,40 @@ export default function Topbar({ role, setScreen }: TopbarProps) {
                       <button
                         key={n.id}
                         onClick={() => !n.read && handleMarkRead(n.id)}
-                        className={`flex w-full items-start gap-3 border-b border-[#f0f1eb] p-4 text-left last:border-0 hover:bg-[#f8f8f4] ${
-                          n.read ? '' : 'bg-[#f6f9ea]'
+                        className={`flex w-full items-start gap-3 border-b border-[#f1f5f9] p-4 text-left last:border-0 hover:bg-[#fff4ec] ${
+                          n.read ? '' : 'bg-[#fff1e8]'
                         }`}
                       >
-                        <span className={`mt-1.5 size-2 shrink-0 rounded-full ${n.read ? 'bg-transparent' : 'bg-[#8aa143]'}`} />
+                        <span className={`mt-1.5 size-2 shrink-0 rounded-full ${n.read ? 'bg-transparent' : 'bg-[#7c3aed]'}`} />
                         <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-semibold text-[#3d4b40]">{n.title}</span>
-                          <span className="mt-0.5 block text-xs text-[#69746a]">{n.message}</span>
-                          <span className="mt-1 block text-[10px] text-[#a1a8a0]">{formatRelative(n.created_at)}</span>
+                          <span className="block text-sm font-semibold text-[#1e293b]">{n.title}</span>
+                          <span className="mt-0.5 block text-xs text-[#475569]">{n.message}</span>
+                          <span className="mt-1 block text-[10px] text-[#94a3b8]">{formatRelative(n.created_at)}</span>
                         </span>
                       </button>
                     ))
                   ) : (
-                    <p className="p-8 text-center text-sm text-[#969f96]">No notifications yet</p>
+                    <p className="p-8 text-center text-sm text-[#64748b]">No notifications yet</p>
                   )}
                 </div>
               </div>
             </>
           )}
         </div>
-        <div className="ml-2 hidden h-8 w-px bg-[#e5e6dc] sm:block" />
+        <div className="ml-2 hidden h-8 w-px bg-[#f3dccf] sm:block" />
         <button
           onClick={() => setScreen('profile')}
           className="flex items-center gap-2 text-left"
         >
           <Avatar initials={initials} className="size-8" />
-          <span className="hidden text-xs font-semibold text-[#39463d] sm:block">
+          <span className="hidden text-xs font-semibold text-[#1e293b] sm:block">
             {userName}
           </span>
         </button>
         <button
           onClick={handleSignOut}
           aria-label="Sign out"
-          className="hidden size-9 place-items-center rounded-full border border-[#e4e6dc] text-[#768076] hover:bg-[#f5d5d5] sm:grid"
+          className="hidden size-9 place-items-center rounded-full border border-[#f3dccf] text-[#64748b] hover:bg-[#fee2e2] sm:grid"
         >
           <LogOut className="size-4" />
         </button>
@@ -203,9 +203,9 @@ export default function Topbar({ role, setScreen }: TopbarProps) {
       <Modal open={showHelp} onClose={() => setShowHelp(false)} title="How KineTic works">
         <div className="space-y-4">
           {HELP[role].map((item) => (
-            <div key={item.title} className="rounded-xl bg-[#f8f8f4] p-4">
-              <p className="text-sm font-semibold text-[#25342d]">{item.title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-[#69746a]">{item.body}</p>
+            <div key={item.title} className="rounded-xl bg-[#fff4ec] p-4">
+              <p className="text-sm font-semibold text-[#1c1446]">{item.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-[#475569]">{item.body}</p>
             </div>
           ))}
         </div>

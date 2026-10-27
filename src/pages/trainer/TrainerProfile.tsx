@@ -62,17 +62,17 @@ export function TrainerProfile() {
     <div className="flex flex-col gap-7">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#93a84e]">Your account</p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#25342d]">Profile</h1>
-          <p className="mt-2 text-sm text-[#7c857c]">Manage your trainer profile and settings.</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#7c3aed]">Your account</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1c1446]">Profile</h1>
+          <p className="mt-2 text-sm text-[#64748b]">Manage your trainer profile and settings.</p>
         </div>
       </div>
 
       <section className="card p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-xl font-semibold text-[#25342d]">Personal information</h2>
-            <p className="mt-1 text-xs text-[#929990]">Your account details</p>
+            <h2 className="font-display text-xl font-semibold text-[#1c1446]">Personal information</h2>
+            <p className="mt-1 text-xs text-[#64748b]">Your account details</p>
           </div>
           {!editing && (
             <button
@@ -84,7 +84,7 @@ export function TrainerProfile() {
                 setSpecialization(profile.specialization || '')
                 setEditing(true)
               }}
-              className="flex items-center gap-2 rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a]"
+              className="flex items-center gap-2 rounded-lg border border-[#f3dccf] px-3 py-2 text-xs text-[#475569]"
             >
               Edit
             </button>
@@ -107,7 +107,7 @@ export function TrainerProfile() {
                 type="email"
                 value={profile.email}
                 disabled
-                className="input bg-[#f8f8f4]"
+                className="input bg-[#fff4ec]"
               />
             </div>
             <div>
@@ -161,67 +161,67 @@ export function TrainerProfile() {
           </div>
         ) : (
           <div className="mt-6 space-y-4">
-            <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf3d5] text-[#718b33]">
+            <div className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d9f99d] text-[#15803d]">
                 <User className="size-4" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-[#969f96]">Full name</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{profile.full_name}</p>
+                <p className="text-xs text-[#64748b]">Full name</p>
+                <p className="text-sm font-semibold text-[#1e293b]">{profile.full_name}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#eee8f3] text-[#6b5a7a]">
+            <div className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ddd6fe] text-[#6d28d9]">
                 <Mail className="size-4" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-[#969f96]">Email</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{profile.email}</p>
+                <p className="text-xs text-[#64748b]">Email</p>
+                <p className="text-sm font-semibold text-[#1e293b]">{profile.email}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f7eadb] text-[#ad784b]">
+            <div className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fed7aa] text-[#ea580c]">
                 <Phone className="size-4" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-[#969f96]">Phone</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{profile.phone || 'Not set'}</p>
+                <p className="text-xs text-[#64748b]">Phone</p>
+                <p className="text-sm font-semibold text-[#1e293b]">{profile.phone || 'Not set'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf3d5] text-[#718b33]">
+            <div className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d9f99d] text-[#15803d]">
                 <MapPin className="size-4" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-[#969f96]">Location</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{profile.location || 'Not set'}</p>
+                <p className="text-xs text-[#64748b]">Location</p>
+                <p className="text-sm font-semibold text-[#1e293b]">{profile.location || 'Not set'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#eee8f3] text-[#6b5a7a]">
+            <div className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ddd6fe] text-[#6d28d9]">
                 <Briefcase className="size-4" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-[#969f96]">Specialization</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{profile.specialization || 'Not set'}</p>
+                <p className="text-xs text-[#64748b]">Specialization</p>
+                <p className="text-sm font-semibold text-[#1e293b]">{profile.specialization || 'Not set'}</p>
               </div>
             </div>
-            <div className="flex items-start gap-4 rounded-xl border border-[#edf0e8] p-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f0f1eb] text-[#8d978d]">
+            <div className="flex items-start gap-4 rounded-xl border border-[#f6e6dc] p-4">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f1f5f9] text-[#64748b]">
                 <User className="size-4" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-[#969f96]">Bio</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{profile.bio || 'Not set'}</p>
+                <p className="text-xs text-[#64748b]">Bio</p>
+                <p className="text-sm font-semibold text-[#1e293b]">{profile.bio || 'Not set'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f7eadb] text-[#ad784b]">
+            <div className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fed7aa] text-[#ea580c]">
                 <Calendar className="size-4" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-[#969f96]">Member since</p>
-                <p className="text-sm font-semibold text-[#3d4b40]">{formatDate(profile.created_at)}</p>
+                <p className="text-xs text-[#64748b]">Member since</p>
+                <p className="text-sm font-semibold text-[#1e293b]">{formatDate(profile.created_at)}</p>
               </div>
             </div>
           </div>
@@ -230,7 +230,7 @@ export function TrainerProfile() {
 
       <button
         onClick={handleSignOut}
-        className="flex w-fit items-center gap-2 rounded-xl border border-[#e5e7dd] bg-white px-4 py-3 text-xs font-semibold text-[#8b4a4a] hover:bg-[#f5d5d5] transition"
+        className="flex w-fit items-center gap-2 rounded-xl border border-[#f3dccf] bg-white px-4 py-3 text-xs font-semibold text-[#dc2626] hover:bg-[#fee2e2] transition"
       >
         <LogOut className="size-4" />Sign out
       </button>

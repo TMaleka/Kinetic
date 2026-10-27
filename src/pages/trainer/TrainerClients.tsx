@@ -309,18 +309,18 @@ export function TrainerClients() {
     <div className="flex flex-col gap-7">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#93a84e]">Your people</p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#25342d]">Clients</h1>
-          <p className="mt-2 text-sm text-[#7c857c]">{clients.length} people in your coaching practice.</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#7c3aed]">Your people</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1c1446]">Clients</h1>
+          <p className="mt-2 text-sm text-[#64748b]">{clients.length} people in your coaching practice.</p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="flex w-fit items-center gap-2 rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white">
+        <button onClick={() => setShowAdd(true)} className="flex w-fit items-center gap-2 rounded-xl bg-[#ff4f1f] px-4 py-3 text-xs font-semibold text-white">
           <Plus className="size-4" />Invite client
         </button>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9ba299]" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#94a3b8]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -335,8 +335,8 @@ export function TrainerClients() {
               onClick={() => setFilter(f.id as any)}
               className={`rounded-xl border px-4 py-2 text-xs font-semibold transition ${
                 filter === f.id
-                  ? 'border-[#25342d] bg-[#25342d] text-white'
-                  : 'border-[#e5e7dd] bg-white text-[#899188] hover:bg-[#f8f8f4]'
+                  ? 'border-[#ff4f1f] bg-[#ff4f1f] text-white'
+                  : 'border-[#f3dccf] bg-white text-[#64748b] hover:bg-[#fff4ec]'
               }`}
             >
               {f.label}
@@ -345,7 +345,7 @@ export function TrainerClients() {
         </div>
       </div>
       {inviteNotice && (
-        <div className="flex items-start justify-between gap-4 rounded-xl bg-[#edf3d5] px-4 py-3 text-sm text-[#4d604c]">
+        <div className="flex items-start justify-between gap-4 rounded-xl bg-[#d9f99d] px-4 py-3 text-sm text-[#166534]">
           <span>{inviteNotice}</span>
           <button onClick={() => setInviteNotice('')} className="text-xs font-semibold">Dismiss</button>
         </div>
@@ -356,25 +356,25 @@ export function TrainerClients() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Pending invitations</h2>
-              <p className="mt-1 text-xs text-[#929990]">Clients waiting to join your practice</p>
+              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Pending invitations</h2>
+              <p className="mt-1 text-xs text-[#64748b]">Clients waiting to join your practice</p>
             </div>
           </div>
           <div className="mt-6 space-y-3">
             {invitations
               .filter((i) => i.status === 'pending')
               .map((invitation) => (
-                <div key={invitation.id} className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
-                  <div className="grid size-10 place-items-center rounded-xl bg-[#f7eadb] text-[#ad784b]">
+                <div key={invitation.id} className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
+                  <div className="grid size-10 place-items-center rounded-xl bg-[#fed7aa] text-[#ea580c]">
                     <Mail className="size-4" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-[#3d4b40]">{invitation.email}</p>
-                    <p className="text-xs text-[#969f96]">Code: {invitation.invite_code}</p>
+                    <p className="text-sm font-semibold text-[#1e293b]">{invitation.email}</p>
+                    <p className="text-xs text-[#64748b]">Code: {invitation.invite_code}</p>
                   </div>
                   <button
                     onClick={() => handleCopyCode(invitation.invite_code)}
-                    className="flex items-center gap-1 rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a] hover:bg-[#f8f8f4]"
+                    className="flex items-center gap-1 rounded-lg border border-[#f3dccf] px-3 py-2 text-xs text-[#475569] hover:bg-[#fff4ec]"
                   >
                     {copiedCode === invitation.invite_code ? <Check size={14} /> : <Copy size={14} />}
                     {copiedCode === invitation.invite_code ? 'Copied' : 'Copy'}
@@ -382,14 +382,14 @@ export function TrainerClients() {
                   <button
                     onClick={() => handleResendEmail(invitation)}
                     disabled={sendingEmail === invitation.id}
-                    className="flex items-center gap-1 rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a] hover:bg-[#f8f8f4]"
+                    className="flex items-center gap-1 rounded-lg border border-[#f3dccf] px-3 py-2 text-xs text-[#475569] hover:bg-[#fff4ec]"
                   >
                     <Mail size={14} />
                     {sendingEmail === invitation.id ? 'Sending...' : 'Email'}
                   </button>
                   <button
                     onClick={() => handleCancelInvitation(invitation.id)}
-                    className="text-xs text-[#899188] hover:text-[#596359]"
+                    className="text-xs text-[#64748b] hover:text-[#334155]"
                   >
                     Cancel
                   </button>
@@ -401,8 +401,8 @@ export function TrainerClients() {
 
       {/* Client list */}
       {filtered.length ? (
-        <div className="overflow-hidden rounded-2xl border border-[#e5e7dd] bg-white">
-          <div className="hidden grid-cols-[1.5fr_1.2fr_.7fr_.8fr_32px] gap-4 border-b border-[#eceee5] px-5 py-3 text-[10px] font-semibold uppercase tracking-[.12em] text-[#9aa198] md:grid">
+        <div className="overflow-hidden rounded-2xl border border-[#f3dccf] bg-white">
+          <div className="hidden grid-cols-[1.5fr_1.2fr_.7fr_.8fr_32px] gap-4 border-b border-[#f1e4da] px-5 py-3 text-[10px] font-semibold uppercase tracking-[.12em] text-[#94a3b8] md:grid">
             <span>Client</span>
             <span>Goal</span>
             <span>Progress</span>
@@ -413,36 +413,36 @@ export function TrainerClients() {
             <Link
               key={client.id}
               to={`/trainer/clients/${client.id}`}
-              className="grid w-full grid-cols-1 items-center gap-4 border-b border-[#eceee5] px-5 py-4 last:border-0 hover:bg-[#f8f8f4] transition md:grid-cols-[1.5fr_1.2fr_.7fr_.8fr_32px]"
+              className="grid w-full grid-cols-1 items-center gap-4 border-b border-[#f1e4da] px-5 py-4 last:border-0 hover:bg-[#fff4ec] transition md:grid-cols-[1.5fr_1.2fr_.7fr_.8fr_32px]"
             >
               <div className="flex items-center gap-3">
                 <div className={`grid size-9 shrink-0 place-items-center rounded-full text-xs font-semibold ${
-                  client.status === 'on_track' ? 'bg-[#edf3d5] text-[#718b33]' :
-                  client.status === 'at_risk' ? 'bg-[#f7eadb] text-[#ad784b]' :
-                  client.status === 'inactive' ? 'bg-[#f0f1eb] text-[#8d978d]' :
-                  'bg-[#eee8f3] text-[#6b5a7a]'
+                  client.status === 'on_track' ? 'bg-[#d9f99d] text-[#15803d]' :
+                  client.status === 'at_risk' ? 'bg-[#fed7aa] text-[#ea580c]' :
+                  client.status === 'inactive' ? 'bg-[#f1f5f9] text-[#64748b]' :
+                  'bg-[#ddd6fe] text-[#6d28d9]'
                 }`}>
                   {client.full_name.split(' ').map((n) => n[0]).join('').toUpperCase()}
                 </div>
-                <span className="text-sm font-semibold text-[#3d4b40]">{client.full_name}</span>
+                <span className="text-sm font-semibold text-[#1e293b]">{client.full_name}</span>
               </div>
-              <span className="text-xs text-[#969f96]">{client.goals || 'No goal set'}</span>
-              <span className="text-xs font-semibold text-[#3d4b40]">{getAdherence(client)}%</span>
+              <span className="text-xs text-[#64748b]">{client.goals || 'No goal set'}</span>
+              <span className="text-xs font-semibold text-[#1e293b]">{getAdherence(client)}%</span>
               <span className={`badge ${
                 client.status === 'on_track' ? 'badge-lime' :
                 client.status === 'at_risk' ? 'badge-peach' :
-                client.status === 'inactive' ? 'bg-[#f0f1eb] text-[#8d978d]' :
+                client.status === 'inactive' ? 'bg-[#f1f5f9] text-[#64748b]' :
                 'badge-lavender'
               }`}>
                 {getStatusLabel(client.status)}
               </span>
-              <ChevronRight className="size-4 text-[#aab2a8]" />
+              <ChevronRight className="size-4 text-[#94a3b8]" />
             </Link>
           ))}
         </div>
       ) : (
-        <div className="flex items-center justify-center rounded-2xl border border-[#e5e7dd] bg-white p-12">
-          <p className="text-sm text-[#969f96]">
+        <div className="flex items-center justify-center rounded-2xl border border-[#f3dccf] bg-white p-12">
+          <p className="text-sm text-[#64748b]">
             {search || filter !== 'all' ? 'No clients match your search or filter' : 'No clients yet — invite your first client above'}
           </p>
         </div>
@@ -452,7 +452,7 @@ export function TrainerClients() {
       {showAdd && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
           <div className="card p-6 max-w-sm w-full">
-            <h2 className="font-display text-xl font-semibold text-[#25342d] mb-6">Invite client</h2>
+            <h2 className="font-display text-xl font-semibold text-[#1c1446] mb-6">Invite client</h2>
             <div className="space-y-4">
               <div>
                 <label className="label">Client's email</label>
@@ -463,12 +463,12 @@ export function TrainerClients() {
                   placeholder="sarah@email.com"
                   className="input"
                 />
-                <p className="text-xs text-[#969f96] mt-2">
+                <p className="text-xs text-[#64748b] mt-2">
                   We'll email them an invite code. Once they sign up with this email, the invitation appears on their Profile page to accept.
                 </p>
               </div>
               {addError && (
-                <p className="text-xs text-[#8b4a4a]">{addError}</p>
+                <p className="text-xs text-[#dc2626]">{addError}</p>
               )}
               <div className="flex gap-3 mt-6">
                 <button

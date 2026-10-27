@@ -31,11 +31,11 @@ const clientNav = [
 function Logo() {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="grid size-8 place-items-center rounded-[11px] bg-[#25342d] text-[#e3f2af]">
+      <div className="grid size-8 place-items-center rounded-[11px] bg-[#ff4f1f] text-[#ffd23f]">
         <Sparkles className="size-4" />
       </div>
-      <span className="font-display text-[19px] font-semibold tracking-tight text-[#25342d]">
-        kinetic<span className="text-[#91a947]">.</span>
+      <span className="font-display text-[19px] font-semibold tracking-tight text-[#1c1446]">
+        kinetic<span className="text-[#ff4f1f]">.</span>
       </span>
     </div>
   );
@@ -43,7 +43,7 @@ function Logo() {
 
 function Avatar({ initials, className = '' }: { initials: string; className?: string }) {
   return (
-    <div className={`grid size-9 shrink-0 place-items-center rounded-full bg-[#e1d8ea] text-xs font-semibold text-[#4b3f58] ${className}`}>
+    <div className={`grid size-9 shrink-0 place-items-center rounded-full bg-[#ddd6fe] text-xs font-semibold text-[#5b21b6] ${className}`}>
       {initials}
     </div>
   );
@@ -77,14 +77,14 @@ export default function Sidebar({ role, screen, setScreen }: SidebarProps) {
             onClick={() => setScreen(id)}
             className={`flex items-center gap-3 rounded-xl px-3 py-3 text-left text-[13px] font-medium transition ${
               screen === id
-                ? 'bg-[#25342d] text-white shadow-sm'
-                : 'text-[#7a8178] hover:bg-[#eef0e7]'
+                ? 'bg-[#ff4f1f] text-white shadow-sm'
+                : 'text-[#475569] hover:bg-[#ffe6d8]'
             }`}
           >
             <Icon className="size-[17px]" />
             {label}
             {id === 'clients' && clientCount !== null && clientCount > 0 && (
-              <span className="ml-auto grid size-5 place-items-center rounded-md bg-[#e5edbf] text-[10px] font-bold text-[#52602f]">
+              <span className="ml-auto grid size-5 place-items-center rounded-md bg-[#d9f99d] text-[10px] font-bold text-[#3f6212]">
                 {clientCount}
               </span>
             )}
@@ -94,18 +94,18 @@ export default function Sidebar({ role, screen, setScreen }: SidebarProps) {
       <div className="mt-auto flex flex-col gap-1">
         <button 
           onClick={() => setScreen('profile')}
-          className="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-medium text-[#7a8178] hover:bg-[#eef0e7]"
+          className="flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-medium text-[#475569] hover:bg-[#ffe6d8]"
         >
           <Settings className="size-[17px]" />
           Settings
         </button>
-        <div className="mt-4 flex items-center gap-3 border-t border-[#e6e7dc] px-3 pt-5">
+        <div className="mt-4 flex items-center gap-3 border-t border-[#f3dccf] px-3 pt-5">
           <Avatar initials={initials} className="size-8" />
           <span className="flex-1">
-            <span className="block text-[12px] font-semibold text-[#25342d]">
+            <span className="block text-[12px] font-semibold text-[#1c1446]">
               {userName}
             </span>
-            <span className="block text-[11px] text-[#92988f]">
+            <span className="block text-[11px] text-[#94a3b8]">
               {role === 'trainer' ? 'Trainer' : 'Client'}
             </span>
           </span>

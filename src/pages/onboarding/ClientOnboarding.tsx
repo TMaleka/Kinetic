@@ -80,11 +80,11 @@ export function ClientOnboarding() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <div className="grid size-16 place-items-center rounded-full bg-[#edf3d5] text-[#718b33] mx-auto mb-4">
+              <div className="grid size-16 place-items-center rounded-full bg-[#d9f99d] text-[#15803d] mx-auto mb-4">
                 <Target className="size-8" />
               </div>
-              <h2 className="font-display text-2xl font-semibold text-[#25342d]">My goal</h2>
-              <p className="mt-2 text-sm text-[#7c857c]">What are you working towards?</p>
+              <h2 className="font-display text-2xl font-semibold text-[#1c1446]">My goal</h2>
+              <p className="mt-2 text-sm text-[#64748b]">What are you working towards?</p>
             </div>
             
             <div className="space-y-4">
@@ -104,8 +104,8 @@ export function ClientOnboarding() {
                     onClick={() => setGoal(option)}
                     className={`rounded-xl border p-4 text-left text-sm transition ${
                       goal === option
-                        ? 'border-[#25342d] bg-[#25342d] text-white'
-                        : 'border-[#e5e7dd] hover:border-[#25342d] hover:bg-[#f8f8f4]'
+                        ? 'border-[#ff4f1f] bg-[#ff4f1f] text-white'
+                        : 'border-[#f3dccf] hover:border-[#ff4f1f] hover:bg-[#fff4ec]'
                     }`}
                   >
                     {option}
@@ -120,11 +120,11 @@ export function ClientOnboarding() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <div className="grid size-16 place-items-center rounded-full bg-[#f7eadb] text-[#ad784b] mx-auto mb-4">
+              <div className="grid size-16 place-items-center rounded-full bg-[#fed7aa] text-[#ea580c] mx-auto mb-4">
                 <Scale className="size-8" />
               </div>
-              <h2 className="font-display text-2xl font-semibold text-[#25342d]">My starting point</h2>
-              <p className="mt-2 text-sm text-[#7c857c]">KineTic asks for the relevant baseline</p>
+              <h2 className="font-display text-2xl font-semibold text-[#1c1446]">My starting point</h2>
+              <p className="mt-2 text-sm text-[#64748b]">KineTic asks for the relevant baseline</p>
             </div>
             
             <div className="space-y-4">
@@ -181,11 +181,11 @@ export function ClientOnboarding() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <div className="grid size-16 place-items-center rounded-full bg-[#eee8f3] text-[#6b5a7a] mx-auto mb-4">
+              <div className="grid size-16 place-items-center rounded-full bg-[#ddd6fe] text-[#6d28d9] mx-auto mb-4">
                 <Activity className="size-8" />
               </div>
-              <h2 className="font-display text-2xl font-semibold text-[#25342d]">My target</h2>
-              <p className="mt-2 text-sm text-[#7c857c]">Where would you like to get to?</p>
+              <h2 className="font-display text-2xl font-semibold text-[#1c1446]">My target</h2>
+              <p className="mt-2 text-sm text-[#64748b]">Where would you like to get to?</p>
             </div>
             
             <div className="space-y-4">
@@ -228,8 +228,8 @@ export function ClientOnboarding() {
                 />
               </div>
               
-              <div className="rounded-xl bg-[#f8f8f4] p-4">
-                <p className="text-sm text-[#6b756a]">
+              <div className="rounded-xl bg-[#fff4ec] p-4">
+                <p className="text-sm text-[#475569]">
                   You can update these targets later. Once you connect with a trainer, they can review and adjust these goals based on their expertise.
                 </p>
               </div>
@@ -252,18 +252,18 @@ export function ClientOnboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fbfbf8] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#fffaf6] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Progress indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-[#93a84e]">Step {getStepNumber()} of 3</span>
+            <span className="text-xs font-semibold text-[#7c3aed]">Step {getStepNumber()} of 3</span>
             <div className="flex gap-1">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
                   className={`h-1.5 w-8 rounded-full transition ${
-                    i <= getStepNumber() ? 'bg-[#25342d]' : 'bg-[#e5e7dd]'
+                    i <= getStepNumber() ? 'bg-[#ff4f1f]' : 'bg-[#f3dccf]'
                   }`}
                 />
               ))}
@@ -277,7 +277,7 @@ export function ClientOnboarding() {
         </div>
 
         {error && (
-          <p className="mt-4 rounded-lg bg-[#f5d5d5] px-4 py-3 text-sm text-[#8b4a4a]">{error}</p>
+          <p className="mt-4 rounded-lg bg-[#fee2e2] px-4 py-3 text-sm text-[#dc2626]">{error}</p>
         )}
 
         {/* Navigation buttons */}

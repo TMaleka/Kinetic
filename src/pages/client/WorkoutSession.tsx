@@ -297,22 +297,22 @@ export function WorkoutSession() {
   const completionModal = showCompletion && (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
       <div className="card p-6 max-w-sm w-full">
-        <div className="grid size-16 place-items-center rounded-full bg-[#edf3d5] text-[#718b33] mx-auto mb-4">
+        <div className="grid size-16 place-items-center rounded-full bg-[#d9f99d] text-[#15803d] mx-auto mb-4">
           <Trophy size={32} />
         </div>
-        <h2 className="font-display text-xl font-semibold text-[#25342d] text-center mb-2">Finish workout</h2>
-        <p className="text-sm text-[#969f96] text-center mb-6">
+        <h2 className="font-display text-xl font-semibold text-[#1c1446] text-center mb-2">Finish workout</h2>
+        <p className="text-sm text-[#64748b] text-center mb-6">
           {logs.filter(l => l.completed).length} of {logs.length} sets completed
         </p>
 
-        <p className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#9aa198] mb-3">How did it feel?</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#94a3b8] mb-3">How did it feel?</p>
         <div className="flex gap-2 mb-6">
           {[1, 2, 3, 4, 5].map((n) => (
             <button
               key={n}
               onClick={() => setFeeling(n)}
               aria-label={`${n} star${n === 1 ? '' : 's'}`}
-              className={`flex-1 py-3 text-2xl ${feeling >= n ? 'text-[#ad784b]' : 'text-[#d0d0c8]'}`}
+              className={`flex-1 py-3 text-2xl ${feeling >= n ? 'text-[#ea580c]' : 'text-[#cbd5e1]'}`}
             >
               ★
             </button>
@@ -343,7 +343,7 @@ export function WorkoutSession() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-sm text-[#8b4a4a] bg-[#f5d5d5] rounded-lg px-4 py-3 mb-4">{error}</p>
+          <p className="text-sm text-[#dc2626] bg-[#fee2e2] rounded-lg px-4 py-3 mb-4">{error}</p>
           <button onClick={loadSession} className="btn-primary">Retry</button>
         </div>
       </div>
@@ -354,11 +354,11 @@ export function WorkoutSession() {
     return (
       <div className="flex flex-col items-center justify-center px-6 py-20">
         <div className="text-center">
-          <div className="grid size-20 place-items-center rounded-full bg-[#edf3d5] text-[#718b33] mx-auto mb-6">
+          <div className="grid size-20 place-items-center rounded-full bg-[#d9f99d] text-[#15803d] mx-auto mb-6">
             <Trophy size={40} />
           </div>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#25342d] mb-2">Workout complete!</h1>
-          <p className="text-sm text-[#969f96] mb-6">
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1c1446] mb-2">Workout complete!</h1>
+          <p className="text-sm text-[#64748b] mb-6">
             {logs.filter(l => l.completed).length} sets completed
           </p>
           <Link to="/app/workouts" className="btn-primary">
@@ -372,7 +372,7 @@ export function WorkoutSession() {
   if (!session) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 px-6 py-20">
-        <p className="text-sm text-[#969f96]">Workout not found</p>
+        <p className="text-sm text-[#64748b]">Workout not found</p>
         <Link to="/app/workouts" className="btn-primary">Back to workouts</Link>
       </div>
     )
@@ -381,8 +381,8 @@ export function WorkoutSession() {
   if (!currentExercise) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 px-6 py-20 text-center">
-        <h1 className="font-display text-2xl font-semibold text-[#25342d]">{session.title}</h1>
-        <p className="text-sm text-[#969f96]">Your trainer hasn't added exercises to this workout.</p>
+        <h1 className="font-display text-2xl font-semibold text-[#1c1446]">{session.title}</h1>
+        <p className="text-sm text-[#64748b]">Your trainer hasn't added exercises to this workout.</p>
         <div className="flex gap-3">
           <Link to="/app/workouts" className="btn-secondary">Back to workouts</Link>
           <button onClick={() => setShowCompletion(true)} className="btn-primary">Mark as done</button>
@@ -400,46 +400,46 @@ export function WorkoutSession() {
     <div className="flex flex-col gap-7">
       <button
         onClick={() => navigate('/app/workouts')}
-        className="flex w-fit items-center gap-2 text-xs font-semibold text-[#7f927d]"
+        className="flex w-fit items-center gap-2 text-xs font-semibold text-[#7c3aed]"
       >
         ← Back to workouts
       </button>
 
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#93a84e]">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#7c3aed]">
             Exercise {currentExerciseIndex + 1} of {exerciseGroups.length}
           </p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#25342d]">{currentExercise.name}</h1>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1c1446]">{currentExercise.name}</h1>
         </div>
-        <div className="flex items-center gap-2 text-sm text-[#969f96]">
+        <div className="flex items-center gap-2 text-sm text-[#64748b]">
           <Dumbbell className="size-4" />
           {totalInExercise} sets
         </div>
       </div>
 
       <section className="card p-6">
-        <div className="flex items-center justify-between border-b border-[#eceee5] pb-3">
-          <span className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#9aa198] w-12">Set</span>
-          <span className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#9aa198] flex-1">Reps</span>
-          <span className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#9aa198] w-20">Weight</span>
-          <span className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#9aa198] w-12 text-right">Done</span>
+        <div className="flex items-center justify-between border-b border-[#f1e4da] pb-3">
+          <span className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#94a3b8] w-12">Set</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#94a3b8] flex-1">Reps</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#94a3b8] w-20">Weight</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#94a3b8] w-12 text-right">Done</span>
         </div>
         
         {currentLogs.map((log, idx) => (
           <div 
             key={log.set_number} 
-            className={`flex items-center py-4 border-b border-[#eceee5] ${
-              idx === currentLogs.length - 1 ? 'bg-[#f8f8f4]' : ''
+            className={`flex items-center py-4 border-b border-[#f1e4da] ${
+              idx === currentLogs.length - 1 ? 'bg-[#fff4ec]' : ''
             }`}
           >
-            <span className="w-12 text-lg font-semibold text-[#25342d]">{log.set_number}</span>
+            <span className="w-12 text-lg font-semibold text-[#1c1446]">{log.set_number}</span>
             <div className="flex-1">
               <input
                 type="number"
                 value={log.reps ?? ''}
                 onChange={(e) => updateLog(idx, 'reps', e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full bg-transparent text-lg font-semibold text-[#25342d] outline-none"
+                className="w-full bg-transparent text-lg font-semibold text-[#1c1446] outline-none"
                 placeholder="-"
               />
             </div>
@@ -449,16 +449,16 @@ export function WorkoutSession() {
                 step="0.5"
                 value={log.weight ?? ''}
                 onChange={(e) => updateLog(idx, 'weight', e.target.value ? parseFloat(e.target.value) : null)}
-                className="w-full bg-transparent text-lg font-semibold text-[#25342d] outline-none text-right"
+                className="w-full bg-transparent text-lg font-semibold text-[#1c1446] outline-none text-right"
                 placeholder="-"
               />
-              <span className="text-[10px] text-[#969f96] ml-1">kg</span>
+              <span className="text-[10px] text-[#64748b] ml-1">kg</span>
             </div>
             <div className="w-12 text-right">
               <button
                 onClick={() => toggleComplete(idx)}
                 className={`grid size-10 place-items-center ${
-                  log.completed ? 'bg-[#25342d] text-white' : 'bg-[#f0f1eb] text-[#8d978d]'
+                  log.completed ? 'bg-[#ff4f1f] text-white' : 'bg-[#f1f5f9] text-[#64748b]'
                 }`}
               >
                 {log.completed && <Check size={20} />}
@@ -469,16 +469,16 @@ export function WorkoutSession() {
         
         <button
           onClick={addSet}
-          className="w-full py-4 text-sm text-[#969f96] hover:text-[#25342d] flex items-center justify-center gap-2"
+          className="w-full py-4 text-sm text-[#64748b] hover:text-[#1c1446] flex items-center justify-center gap-2"
         >
           <Plus size={20} />
           Add set
         </button>
       </section>
 
-      <p className="text-xs text-[#969f96]">
+      <p className="text-xs text-[#64748b]">
         {completedInExercise} of {totalInExercise} sets done for this exercise
-        {savedMessage && <span className="ml-2 font-semibold text-[#718b33]">· {savedMessage}</span>}
+        {savedMessage && <span className="ml-2 font-semibold text-[#15803d]">· {savedMessage}</span>}
       </p>
 
       <div className="flex flex-wrap gap-3">

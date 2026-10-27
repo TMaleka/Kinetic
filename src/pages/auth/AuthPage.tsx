@@ -62,26 +62,26 @@ export function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#fbfbf8]">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[#fffaf6]">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-[#25342d] text-white mb-4">
+          <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-[#ff4f1f] text-white mb-4">
             <Dumbbell size={32} />
           </div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-[#25342d]">KineTic</h1>
-          <p className="text-sm text-[#7c857c] mt-2">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-[#1c1446]">KineTic</h1>
+          <p className="text-sm text-[#64748b] mt-2">
             {mode === 'signup' ? 'Create your account' : 'Welcome back'}
           </p>
         </div>
 
         <div className="card p-6">
           {/* Mode toggle */}
-          <div className="flex gap-1 p-1 bg-[#f0f1eb] rounded-xl mb-6">
+          <div className="flex gap-1 p-1 bg-[#f1f5f9] rounded-xl mb-6">
             <button
               type="button"
               onClick={() => setMode('signup')}
               className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
-                mode === 'signup' ? 'bg-white text-[#25342d] shadow-sm' : 'text-[#8d978d]'
+                mode === 'signup' ? 'bg-white text-[#1c1446] shadow-sm' : 'text-[#64748b]'
               }`}
             >
               Sign up
@@ -90,7 +90,7 @@ export function AuthPage() {
               type="button"
               onClick={() => setMode('signin')}
               className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
-                mode === 'signin' ? 'bg-white text-[#25342d] shadow-sm' : 'text-[#8d978d]'
+                mode === 'signin' ? 'bg-white text-[#1c1446] shadow-sm' : 'text-[#64748b]'
               }`}
             >
               Sign in
@@ -119,24 +119,24 @@ export function AuthPage() {
                       onClick={() => setRole('trainer')}
                       className={`p-4 rounded-xl border-2 text-left transition-all ${
                         role === 'trainer'
-                          ? 'border-[#c0d568] bg-[#edf3d5]'
-                          : 'border-[#e5e7dd] hover:border-[#c0d568]'
+                          ? 'border-[#ff8a4c] bg-[#d9f99d]'
+                          : 'border-[#f3dccf] hover:border-[#ff8a4c]'
                       }`}
                     >
-                      <p className="font-semibold text-[#25342d]">Trainer</p>
-                      <p className="text-xs text-[#969f96] mt-0.5">Coach clients</p>
+                      <p className="font-semibold text-[#1c1446]">Trainer</p>
+                      <p className="text-xs text-[#64748b] mt-0.5">Coach clients</p>
                     </button>
                     <button
                       type="button"
                       onClick={() => setRole('client')}
                       className={`p-4 rounded-xl border-2 text-left transition-all ${
                         role === 'client'
-                          ? 'border-[#c0d568] bg-[#edf3d5]'
-                          : 'border-[#e5e7dd] hover:border-[#c0d568]'
+                          ? 'border-[#ff8a4c] bg-[#d9f99d]'
+                          : 'border-[#f3dccf] hover:border-[#ff8a4c]'
                       }`}
                     >
-                      <p className="font-semibold text-[#25342d]">Client</p>
-                      <p className="text-xs text-[#969f96] mt-0.5">Get coached</p>
+                      <p className="font-semibold text-[#1c1446]">Client</p>
+                      <p className="text-xs text-[#64748b] mt-0.5">Get coached</p>
                     </button>
                   </div>
                 </div>
@@ -178,10 +178,10 @@ export function AuthPage() {
             </div>
 
             {notice && (
-              <p className="rounded-lg bg-[#edf3d5] px-4 py-3 text-sm text-[#4d604c]">{notice}</p>
+              <p className="rounded-lg bg-[#d9f99d] px-4 py-3 text-sm text-[#166534]">{notice}</p>
             )}
             {error && (
-              <div className="text-sm text-[#8b4a4a] bg-[#f5d5d5] rounded-lg px-3 py-2">
+              <div className="text-sm text-[#dc2626] bg-[#fee2e2] rounded-lg px-3 py-2">
                 {error}
               </div>
             )}
@@ -196,7 +196,7 @@ export function AuthPage() {
           </form>
         </div>
 
-        <p className="text-center text-sm text-[#969f96] mt-6">
+        <p className="text-center text-sm text-[#64748b] mt-6">
           {mode === 'signup'
             ? 'Already have an account? '
             : "Don't have an account? "}
@@ -206,7 +206,7 @@ export function AuthPage() {
               setMode(mode === 'signup' ? 'signin' : 'signup')
               setError('')
             }}
-            className="text-[#718b33] font-semibold hover:underline"
+            className="text-[#15803d] font-semibold hover:underline"
           >
             {mode === 'signup' ? 'Sign in' : 'Sign up'}
           </button>

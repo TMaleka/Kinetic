@@ -35,8 +35,8 @@ export default function MobileNav({ role, screen, setScreen }: MobileNavProps) {
             onClick={() => setScreen(id)}
             className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition ${
               screen === id
-                ? 'text-[#25342d]'
-                : 'text-[#9aa096]'
+                ? 'text-[#1c1446]'
+                : 'text-[#94a3b8]'
             }`}
           >
             <Icon className="size-5" />

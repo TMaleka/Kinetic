@@ -103,13 +103,13 @@ export function WorkoutPlans() {
     <div className="flex flex-col gap-7">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#93a84e]">Your programmes</p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#25342d]">Workout plans</h1>
-          <p className="mt-2 text-sm text-[#7c857c]">Create and manage training programmes.</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#7c3aed]">Your programmes</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1c1446]">Workout plans</h1>
+          <p className="mt-2 text-sm text-[#64748b]">Create and manage training programmes.</p>
         </div>
         <Link
           to="/trainer/plans/new"
-          className="flex w-fit items-center gap-2 rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white"
+          className="flex w-fit items-center gap-2 rounded-xl bg-[#ff4f1f] px-4 py-3 text-xs font-semibold text-white"
         >
           <Plus className="size-4" />Create plan
         </Link>
@@ -121,38 +121,38 @@ export function WorkoutPlans() {
             <Link
               key={plan.id}
               to={`/trainer/plans/${plan.id}/edit`}
-              className="card p-6 hover:bg-[#f8f8f4] transition"
+              className="card p-6 hover:bg-[#fff4ec] transition"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3">
-                    <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf3d5] text-[#718b33]">
+                    <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d9f99d] text-[#15803d]">
                       <Dumbbell className="size-4" />
                     </div>
                     <div>
-                      <h2 className="font-display text-lg font-semibold text-[#25342d]">{plan.title}</h2>
+                      <h2 className="font-display text-lg font-semibold text-[#1c1446]">{plan.title}</h2>
                       {plan.description && (
-                        <p className="text-sm text-[#969f96] mt-1">{plan.description}</p>
+                        <p className="text-sm text-[#64748b] mt-1">{plan.description}</p>
                       )}
                     </div>
                   </div>
                   <div className="mt-4 flex items-center gap-4">
-                    <div className="flex items-center gap-2 text-xs text-[#969f96]">
+                    <div className="flex items-center gap-2 text-xs text-[#64748b]">
                       <Calendar className="size-3" />
                       {plan.days?.[0]?.count ?? 0} days
                     </div>
                     {plan.client ? (
-                      <div className="flex items-center gap-2 text-xs text-[#969f96]">
+                      <div className="flex items-center gap-2 text-xs text-[#64748b]">
                         <User className="size-3" />
                         {plan.client.full_name}
                       </div>
                     ) : (
-                      <span className="text-xs text-[#969f96]">Template (unassigned)</span>
+                      <span className="text-xs text-[#64748b]">Template (unassigned)</span>
                     )}
                     <span className={`badge ${
                       plan.status === 'active' ? 'badge-lime' :
-                      plan.status === 'draft' ? 'bg-[#f0f1eb] text-[#8d978d]' :
-                      'bg-[#f7eadb] text-[#ad784b]'
+                      plan.status === 'draft' ? 'bg-[#f1f5f9] text-[#64748b]' :
+                      'bg-[#fed7aa] text-[#ea580c]'
                     }`}>
                       {plan.status}
                     </span>
@@ -166,20 +166,20 @@ export function WorkoutPlans() {
                       handleDelete(plan.id)
                     }}
                     aria-label="Delete plan"
-                    className="grid size-8 place-items-center rounded-lg text-[#8b4a4a] hover:bg-[#f5d5d5]"
+                    className="grid size-8 place-items-center rounded-lg text-[#dc2626] hover:bg-[#fee2e2]"
                   >
                     <Trash2 className="size-4" />
                   </button>
-                  <ChevronRight className="size-4 text-[#aab2a8]" />
+                  <ChevronRight className="size-4 text-[#94a3b8]" />
                 </div>
               </div>
             </Link>
           ))}
         </div>
       ) : (
-        <div className="flex items-center justify-center rounded-2xl border border-[#e5e7dd] bg-white p-12">
+        <div className="flex items-center justify-center rounded-2xl border border-[#f3dccf] bg-white p-12">
           <div className="text-center">
-            <p className="text-sm text-[#969f96] mb-4">No workout plans yet</p>
+            <p className="text-sm text-[#64748b] mb-4">No workout plans yet</p>
             <Link to="/trainer/plans/new" className="btn-primary">
               Create your first plan
             </Link>

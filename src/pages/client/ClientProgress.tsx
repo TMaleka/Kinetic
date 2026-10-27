@@ -225,13 +225,13 @@ export function ClientProgress() {
     <div className="flex flex-col gap-7">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#93a84e]">Your results</p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#25342d]">Progress</h1>
-          <p className="mt-2 text-sm text-[#7c857c]">Track your fitness journey.</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#7c3aed]">Your results</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1c1446]">Progress</h1>
+          <p className="mt-2 text-sm text-[#64748b]">Track your fitness journey.</p>
         </div>
         <button
           onClick={() => setShowAddMeasurement(true)}
-          className="flex w-fit items-center gap-2 rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white"
+          className="flex w-fit items-center gap-2 rounded-xl bg-[#ff4f1f] px-4 py-3 text-xs font-semibold text-white"
         >
           <Plus className="size-4" />Log measurement
         </button>
@@ -241,13 +241,13 @@ export function ClientProgress() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Weight progress</h2>
-              <p className="mt-1 text-xs text-[#929990]">Last {rangeWeeks} weeks</p>
+              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Weight progress</h2>
+              <p className="mt-1 text-xs text-[#64748b]">Last {rangeWeeks} weeks</p>
             </div>
             <select
               value={rangeWeeks}
               onChange={(e) => setRangeWeeks(Number(e.target.value))}
-              className="rounded-lg border border-[#e5e7dd] bg-white px-3 py-2 text-xs text-[#69746a] outline-none hover:bg-[#f8f8f4]"
+              className="rounded-lg border border-[#f3dccf] bg-white px-3 py-2 text-xs text-[#475569] outline-none hover:bg-[#fff4ec]"
             >
               {[4, 8, 12, 26, 52].map((w) => (
                 <option key={w} value={w}>{w} weeks</option>
@@ -256,34 +256,34 @@ export function ClientProgress() {
           </div>
           {weightPoints.length > 0 ? (
             <>
-              <div className="mt-8 flex h-44 items-end gap-2 border-b border-[#eceee5] px-2">
+              <div className="mt-8 flex h-44 items-end gap-2 border-b border-[#f1e4da] px-2">
                 {weightPoints.map((m) => (
                   <div key={m.id} className="flex h-full flex-1 items-end" title={`${formatDate(m.logged_at)}: ${m.body_weight}kg`}>
                     <div
-                      className="w-full rounded-t-md bg-[#b9cd69] transition-all hover:bg-[#a5bd55]"
+                      className="w-full rounded-t-md bg-[#ff4f1f] transition-all hover:bg-[#e63e10]"
                       style={{ height: `${25 + ((Number(m.body_weight) - minWeight) / spread) * 70}%` }}
                     />
                   </div>
                 ))}
               </div>
-              <div className="mt-3 flex justify-between text-[10px] text-[#a1a8a0]">
+              <div className="mt-3 flex justify-between text-[10px] text-[#94a3b8]">
                 <span>{formatDate(weightPoints[0].logged_at)}</span>
                 {weightPoints.length > 1 && <span>{formatDate(weightPoints[weightPoints.length - 1].logged_at)}</span>}
               </div>
             </>
           ) : (
-            <div className="mt-8 flex h-44 items-center justify-center rounded-xl bg-[#f8f8f4]">
-              <p className="text-sm text-[#969f96]">No weight logged in the last {rangeWeeks} weeks</p>
+            <div className="mt-8 flex h-44 items-center justify-center rounded-xl bg-[#fff4ec]">
+              <p className="text-sm text-[#64748b]">No weight logged in the last {rangeWeeks} weeks</p>
             </div>
           )}
           {lastWeight && (
-            <div className="mt-6 flex items-center justify-between rounded-xl bg-[#f8f8f4] p-4">
+            <div className="mt-6 flex items-center justify-between rounded-xl bg-[#fff4ec] p-4">
               <div>
-                <p className="text-xs text-[#969f96]">Current weight</p>
-                <p className="text-lg font-semibold text-[#25342d]">{lastWeight}kg</p>
+                <p className="text-xs text-[#64748b]">Current weight</p>
+                <p className="text-lg font-semibold text-[#1c1446]">{lastWeight}kg</p>
               </div>
               <span className={`text-xs font-semibold ${
-                weightChange && weightChange < 0 ? 'text-[#718b33]' : 'text-[#ad784b]'
+                weightChange && weightChange < 0 ? 'text-[#15803d]' : 'text-[#ea580c]'
               }`}>
                 {weightChange && weightChange < 0 ? '↓' : weightChange && weightChange > 0 ? '↑' : ''} {weightChange ? Math.abs(weightChange).toFixed(1) : '0'}kg
               </span>
@@ -294,12 +294,12 @@ export function ClientProgress() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Progress photos</h2>
-              <p className="mt-1 text-xs text-[#929990]">Visual progress over time</p>
+              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Progress photos</h2>
+              <p className="mt-1 text-xs text-[#64748b]">Visual progress over time</p>
             </div>
             <button
               onClick={() => setShowAddPhoto(true)}
-              className="flex items-center gap-2 rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a]"
+              className="flex items-center gap-2 rounded-lg border border-[#f3dccf] px-3 py-2 text-xs text-[#475569]"
             >
               <Camera className="size-4" />Add
             </button>
@@ -307,7 +307,7 @@ export function ClientProgress() {
           {photos.length > 0 ? (
             <div className="mt-6 grid grid-cols-2 gap-4">
               {photos.map((photo) => (
-                <div key={photo.id} className="aspect-square bg-[#f8f8f4] rounded-2xl overflow-hidden relative group">
+                <div key={photo.id} className="aspect-square bg-[#fff4ec] rounded-2xl overflow-hidden relative group">
                   <img
                     src={photo.display_url}
                     alt={photo.caption || 'Progress photo'}
@@ -315,7 +315,7 @@ export function ClientProgress() {
                   />
                   <button
                     onClick={() => handleDeletePhoto(photo)}
-                    className="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-white/80 text-[#8b4a4a] opacity-0 transition-opacity group-hover:opacity-100"
+                    className="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-white/80 text-[#dc2626] opacity-0 transition-opacity group-hover:opacity-100"
                   >
                     <X className="size-4" />
                   </button>
@@ -323,8 +323,8 @@ export function ClientProgress() {
               ))}
             </div>
           ) : (
-            <div className="mt-6 flex items-center justify-center rounded-xl bg-[#f8f8f4] p-8">
-              <p className="text-sm text-[#969f96]">No photos yet</p>
+            <div className="mt-6 flex items-center justify-center rounded-xl bg-[#fff4ec] p-8">
+              <p className="text-sm text-[#64748b]">No photos yet</p>
             </div>
           )}
         </section>
@@ -333,28 +333,28 @@ export function ClientProgress() {
       <section className="card p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-xl font-semibold text-[#25342d]">All measurements</h2>
-            <p className="mt-1 text-xs text-[#929990]">Complete measurement history</p>
+            <h2 className="font-display text-xl font-semibold text-[#1c1446]">All measurements</h2>
+            <p className="mt-1 text-xs text-[#64748b]">Complete measurement history</p>
           </div>
         </div>
         <div className="mt-6 space-y-3">
           {measurements.length > 0 ? (
             [...measurements].reverse().map((m) => (
-              <div key={m.id} className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
-                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf3d5] text-[#718b33]">
+              <div key={m.id} className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
+                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d9f99d] text-[#15803d]">
                   <TrendingUp className="size-4" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-[#3d4b40]">
+                  <p className="text-sm font-semibold text-[#1e293b]">
                     {[m.body_weight && `${m.body_weight}kg`, m.chest && `Chest ${m.chest}cm`, m.waist && `Waist ${m.waist}cm`].filter(Boolean).join(' · ') || 'Measurement'}
                   </p>
-                  <p className="text-xs text-[#969f96]">{formatDate(m.logged_at)}</p>
+                  <p className="text-xs text-[#64748b]">{formatDate(m.logged_at)}</p>
                 </div>
               </div>
             ))
           ) : (
-            <div className="flex items-center justify-center rounded-xl bg-[#f8f8f4] p-8">
-              <p className="text-sm text-[#969f96]">No measurements logged yet</p>
+            <div className="flex items-center justify-center rounded-xl bg-[#fff4ec] p-8">
+              <p className="text-sm text-[#64748b]">No measurements logged yet</p>
             </div>
           )}
         </div>
@@ -364,7 +364,7 @@ export function ClientProgress() {
       {showAddMeasurement && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
           <div className="card p-6 max-w-sm w-full">
-            <h2 className="font-display text-xl font-semibold text-[#25342d] mb-6">Log measurement</h2>
+            <h2 className="font-display text-xl font-semibold text-[#1c1446] mb-6">Log measurement</h2>
             <div className="space-y-4">
               <div>
                 <label className="label">Weight (kg)</label>
@@ -401,17 +401,17 @@ export function ClientProgress() {
       {showAddPhoto && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
           <div className="card p-6 max-w-sm w-full">
-            <h2 className="font-display text-xl font-semibold text-[#25342d] mb-6">Add progress photo</h2>
+            <h2 className="font-display text-xl font-semibold text-[#1c1446] mb-6">Add progress photo</h2>
             <div className="space-y-4">
               <div>
                 <label className="label">Photo</label>
-                <label className="mt-1 flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-dashed border-[#e5e7dd] bg-[#f8f8f4] p-4 text-center hover:border-[#c0d568]">
+                <label className="mt-1 flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-dashed border-[#f3dccf] bg-[#fff4ec] p-4 text-center hover:border-[#ff8a4c]">
                   {photoPreview ? (
                     <img src={photoPreview} alt="Selected photo" className="max-h-48 rounded-lg object-contain" />
                   ) : (
                     <>
-                      <Camera className="size-6 text-[#969f96]" />
-                      <span className="text-xs text-[#69746a]">Take a photo or choose from your device</span>
+                      <Camera className="size-6 text-[#64748b]" />
+                      <span className="text-xs text-[#475569]">Take a photo or choose from your device</span>
                     </>
                   )}
                   <input
@@ -421,7 +421,7 @@ export function ClientProgress() {
                     onChange={(e) => handlePhotoSelected(e.target.files?.[0] || null)}
                   />
                 </label>
-                {photoFile && <p className="mt-1 text-[10px] text-[#969f96]">{photoFile.name}</p>}
+                {photoFile && <p className="mt-1 text-[10px] text-[#64748b]">{photoFile.name}</p>}
               </div>
               <div>
                 <label className="label">Type</label>
@@ -431,7 +431,7 @@ export function ClientProgress() {
                       key={type}
                       onClick={() => setPhotoType(type)}
                       className={`py-2 text-[10px] font-semibold uppercase tracking-[.12em] rounded-xl ${
-                        photoType === type ? 'bg-[#25342d] text-white' : 'bg-[#f0f1eb] text-[#8d978d]'
+                        photoType === type ? 'bg-[#ff4f1f] text-white' : 'bg-[#f1f5f9] text-[#64748b]'
                       }`}
                     >
                       {type}

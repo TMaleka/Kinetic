@@ -8,18 +8,18 @@ import { todayISO, toLocalISO, addDays, adherencePercent, computeStreak } from '
 import { WeeklyActivityChart } from '../../components/WeeklyActivityChart'
 
 function StatCard({ label, value, detail, icon: Icon, accent = 'lime' }: { label: string; value: string; detail: string; icon: any; accent?: 'lime' | 'lavender' | 'peach' }) {
-  const bg = accent === 'lime' ? 'bg-[#edf3d5]' : accent === 'lavender' ? 'bg-[#eee8f3]' : 'bg-[#f7eadb]'
+  const bg = accent === 'lime' ? 'bg-[#d9f99d]' : accent === 'lavender' ? 'bg-[#ddd6fe]' : 'bg-[#fed7aa]'
   return (
     <div className={`stat-card ${bg}`}>
       <div className="flex items-start justify-between">
         <div className="label">{label}</div>
-        <div className="grid size-8 place-items-center rounded-xl bg-white/70 text-[#65722f]">
+        <div className="grid size-8 place-items-center rounded-xl bg-white/70 text-[#3f6212]">
           <Icon className="size-4" />
         </div>
       </div>
-      <div className="mt-5 font-display text-[30px] font-semibold tracking-tight text-[#25342d]">{value}</div>
-      <div className="mt-1 flex items-center gap-1 text-xs text-[#778078]">
-        <TrendingUp className="size-3 text-[#8da74a]" />{detail}
+      <div className="mt-5 font-display text-[30px] font-semibold tracking-tight text-[#1c1446]">{value}</div>
+      <div className="mt-1 flex items-center gap-1 text-xs text-[#64748b]">
+        <TrendingUp className="size-3 text-[#16a34a]" />{detail}
       </div>
     </div>
   )
@@ -155,7 +155,7 @@ export function ClientDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-sm text-[#8b4a4a] bg-[#f5d5d5] rounded-lg px-4 py-3 mb-4">{error}</p>
+          <p className="text-sm text-[#dc2626] bg-[#fee2e2] rounded-lg px-4 py-3 mb-4">{error}</p>
           <button onClick={loadData} className="btn-primary">Retry</button>
         </div>
       </div>
@@ -166,11 +166,11 @@ export function ClientDashboard() {
     <div className="flex flex-col gap-7">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#93a84e]">{getDayName()}</p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#25342d]">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#7c3aed]">{getDayName()}</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1c1446]">
             {getGreeting()}, {firstName}.
           </h1>
-          <p className="mt-2 text-sm text-[#7c857c]">Let's crush your goals today.</p>
+          <p className="mt-2 text-sm text-[#64748b]">Let's crush your goals today.</p>
         </div>
       </div>
 
@@ -178,12 +178,12 @@ export function ClientDashboard() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Today's workout</h2>
-              <p className="mt-1 text-xs text-[#929990]">{todaySession.title}</p>
+              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Today's workout</h2>
+              <p className="mt-1 text-xs text-[#64748b]">{todaySession.title}</p>
             </div>
             <Link
               to={`/app/workouts/${todaySession.id}`}
-              className="flex items-center gap-2 rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white"
+              className="flex items-center gap-2 rounded-xl bg-[#ff4f1f] px-4 py-3 text-xs font-semibold text-white"
             >
               {todaySession.status === 'completed' ? (
                 <>
@@ -203,8 +203,8 @@ export function ClientDashboard() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Rest day</h2>
-              <p className="mt-1 text-xs text-[#929990]">No workout scheduled today</p>
+              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Rest day</h2>
+              <p className="mt-1 text-xs text-[#64748b]">No workout scheduled today</p>
             </div>
           </div>
         </section>
@@ -220,12 +220,12 @@ export function ClientDashboard() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Connect with a trainer</h2>
-              <p className="mt-1 text-xs text-[#929990]">
+              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Connect with a trainer</h2>
+              <p className="mt-1 text-xs text-[#64748b]">
                 Ask your trainer to invite <span className="font-semibold">{profile?.email}</span>, then accept the invitation on your profile.
               </p>
             </div>
-            <Link to="/app/profile" className="shrink-0 rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white hover:bg-[#3d4b40] transition">
+            <Link to="/app/profile" className="shrink-0 rounded-xl bg-[#ff4f1f] px-4 py-3 text-xs font-semibold text-white hover:bg-[#e63e10] transition">
               View invitations
             </Link>
           </div>
@@ -238,38 +238,38 @@ export function ClientDashboard() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Key metrics</h2>
-              <p className="mt-1 text-xs text-[#929990]">Progress at a glance</p>
+              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Key metrics</h2>
+              <p className="mt-1 text-xs text-[#64748b]">Progress at a glance</p>
             </div>
           </div>
           <div className="mt-6 space-y-4">
             {latestWeight && (
-              <div className="flex items-center justify-between rounded-xl bg-[#f8f8f4] p-4">
+              <div className="flex items-center justify-between rounded-xl bg-[#fff4ec] p-4">
                 <div>
-                  <p className="text-xs text-[#969f96]">Weight</p>
-                  <p className="text-lg font-semibold text-[#25342d]">{latestWeight.body_weight}kg</p>
+                  <p className="text-xs text-[#64748b]">Weight</p>
+                  <p className="text-lg font-semibold text-[#1c1446]">{latestWeight.body_weight}kg</p>
                 </div>
                 <span className={`text-xs font-semibold ${
-                  weightChange && weightChange < 0 ? 'text-[#718b33]' : 'text-[#ad784b]'
+                  weightChange && weightChange < 0 ? 'text-[#15803d]' : 'text-[#ea580c]'
                 }`}>
                   {weightChange && weightChange < 0 ? '↓' : weightChange && weightChange > 0 ? '↑' : ''} {weightChange ? Math.abs(weightChange).toFixed(1) : '0'}kg
                 </span>
               </div>
             )}
-            <div className="flex items-center justify-between rounded-xl bg-[#f8f8f4] p-4">
+            <div className="flex items-center justify-between rounded-xl bg-[#fff4ec] p-4">
               <div>
-                <p className="text-xs text-[#969f96]">Workouts this week</p>
-                <p className="text-lg font-semibold text-[#25342d]">{weekCount}</p>
+                <p className="text-xs text-[#64748b]">Workouts this week</p>
+                <p className="text-lg font-semibold text-[#1c1446]">{weekCount}</p>
               </div>
-              <span className="text-xs font-semibold text-[#718b33]">{streak > 0 ? `${streak}-day streak` : ''}</span>
+              <span className="text-xs font-semibold text-[#15803d]">{streak > 0 ? `${streak}-day streak` : ''}</span>
             </div>
-            <div className="flex items-center justify-between rounded-xl bg-[#f8f8f4] p-4">
+            <div className="flex items-center justify-between rounded-xl bg-[#fff4ec] p-4">
               <div>
-                <p className="text-xs text-[#969f96]">Adherence</p>
-                <p className="text-lg font-semibold text-[#25342d]">{adherence}%</p>
+                <p className="text-xs text-[#64748b]">Adherence</p>
+                <p className="text-lg font-semibold text-[#1c1446]">{adherence}%</p>
               </div>
               <span className={`text-xs font-semibold ${
-                adherence >= 80 ? 'text-[#718b33]' : adherence >= 60 ? 'text-[#ad784b]' : 'text-[#8b4a4a]'
+                adherence >= 80 ? 'text-[#15803d]' : adherence >= 60 ? 'text-[#ea580c]' : 'text-[#dc2626]'
               }`}>
                 {adherence >= 80 ? 'Excellent' : adherence >= 60 ? 'Good' : 'Needs work'}
               </span>
