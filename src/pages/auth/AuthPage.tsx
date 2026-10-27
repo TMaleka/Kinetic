@@ -62,13 +62,13 @@ export function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#fffaf6]">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[#f7fbfd]">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-[#ff4f1f] text-white mb-4">
+          <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-[#28a9e8] text-white mb-4">
             <Dumbbell size={32} />
           </div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-[#1c1446]">KineTic</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-[#0f2a3a]">KineTic</h1>
           <p className="text-sm text-[#64748b] mt-2">
             {mode === 'signup' ? 'Create your account' : 'Welcome back'}
           </p>
@@ -81,7 +81,7 @@ export function AuthPage() {
               type="button"
               onClick={() => setMode('signup')}
               className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
-                mode === 'signup' ? 'bg-white text-[#1c1446] shadow-sm' : 'text-[#64748b]'
+                mode === 'signup' ? 'bg-white text-[#0f2a3a] shadow-sm' : 'text-[#64748b]'
               }`}
             >
               Sign up
@@ -90,7 +90,7 @@ export function AuthPage() {
               type="button"
               onClick={() => setMode('signin')}
               className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
-                mode === 'signin' ? 'bg-white text-[#1c1446] shadow-sm' : 'text-[#64748b]'
+                mode === 'signin' ? 'bg-white text-[#0f2a3a] shadow-sm' : 'text-[#64748b]'
               }`}
             >
               Sign in
@@ -119,11 +119,11 @@ export function AuthPage() {
                       onClick={() => setRole('trainer')}
                       className={`p-4 rounded-xl border-2 text-left transition-all ${
                         role === 'trainer'
-                          ? 'border-[#ff8a4c] bg-[#d9f99d]'
-                          : 'border-[#f3dccf] hover:border-[#ff8a4c]'
+                          ? 'border-[#28a9e8] bg-[#e0f3fc]'
+                          : 'border-[#d9e9f2] hover:border-[#68d6e8]'
                       }`}
                     >
-                      <p className="font-semibold text-[#1c1446]">Trainer</p>
+                      <p className="font-semibold text-[#0f2a3a]">Trainer</p>
                       <p className="text-xs text-[#64748b] mt-0.5">Coach clients</p>
                     </button>
                     <button
@@ -131,11 +131,11 @@ export function AuthPage() {
                       onClick={() => setRole('client')}
                       className={`p-4 rounded-xl border-2 text-left transition-all ${
                         role === 'client'
-                          ? 'border-[#ff8a4c] bg-[#d9f99d]'
-                          : 'border-[#f3dccf] hover:border-[#ff8a4c]'
+                          ? 'border-[#28a9e8] bg-[#e0f3fc]'
+                          : 'border-[#d9e9f2] hover:border-[#68d6e8]'
                       }`}
                     >
-                      <p className="font-semibold text-[#1c1446]">Client</p>
+                      <p className="font-semibold text-[#0f2a3a]">Client</p>
                       <p className="text-xs text-[#64748b] mt-0.5">Get coached</p>
                     </button>
                   </div>
@@ -178,10 +178,10 @@ export function AuthPage() {
             </div>
 
             {notice && (
-              <p className="rounded-lg bg-[#d9f99d] px-4 py-3 text-sm text-[#166534]">{notice}</p>
+              <p className="rounded-lg bg-[#d6f0e3] px-4 py-3 text-sm text-[#075a38]">{notice}</p>
             )}
             {error && (
-              <div className="text-sm text-[#dc2626] bg-[#fee2e2] rounded-lg px-3 py-2">
+              <div className="text-sm text-[#f3263a] bg-[#fde3e6] rounded-lg px-3 py-2">
                 {error}
               </div>
             )}
@@ -206,7 +206,7 @@ export function AuthPage() {
               setMode(mode === 'signup' ? 'signin' : 'signup')
               setError('')
             }}
-            className="text-[#ff4f1f] font-semibold hover:underline"
+            className="text-[#f3263a] font-semibold hover:underline"
           >
             {mode === 'signup' ? 'Sign in' : 'Sign up'}
           </button>

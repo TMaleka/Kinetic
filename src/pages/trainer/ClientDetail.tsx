@@ -9,18 +9,18 @@ import { createNotification } from '../../lib/notifications'
 import { WeeklyActivityChart } from '../../components/WeeklyActivityChart'
 
 function StatCard({ label, value, detail, icon: Icon, accent = 'lime' }: { label: string; value: string; detail: string; icon: any; accent?: 'lime' | 'lavender' | 'peach' }) {
-  const bg = accent === 'lime' ? 'bg-[#d9f99d]' : accent === 'lavender' ? 'bg-[#ddd6fe]' : 'bg-[#fed7aa]'
+  const bg = accent === 'lime' ? 'bg-[#d6f0e3]' : accent === 'lavender' ? 'bg-[#d4f4f9]' : 'bg-[#dff2fc]'
   return (
     <div className={`stat-card ${bg}`}>
       <div className="flex items-start justify-between">
         <div className="label">{label}</div>
-        <div className="grid size-8 place-items-center rounded-xl bg-white/70 text-[#3f6212]">
+        <div className="grid size-8 place-items-center rounded-xl bg-white/70 text-[#075a38]">
           <Icon className="size-4" />
         </div>
       </div>
-      <div className="mt-5 font-display text-[30px] font-semibold tracking-tight text-[#1c1446]">{value}</div>
+      <div className="mt-5 font-display text-[30px] font-semibold tracking-tight text-[#0f2a3a]">{value}</div>
       <div className="mt-1 flex items-center gap-1 text-xs text-[#64748b]">
-        <TrendingUp className="size-3 text-[#16a34a]" />{detail}
+        <TrendingUp className="size-3 text-[#0b7a4b]" />{detail}
       </div>
     </div>
   )
@@ -226,24 +226,24 @@ export function ClientDetail() {
 
   return (
     <div className="flex flex-col gap-7">
-      <Link to="/trainer/clients" className="flex w-fit items-center gap-2 text-xs font-semibold text-[#7c3aed]">
+      <Link to="/trainer/clients" className="flex w-fit items-center gap-2 text-xs font-semibold text-[#1787c4]">
         ← Back to clients
       </Link>
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
         <div className="flex items-center gap-4">
           <div className={`grid size-16 shrink-0 place-items-center rounded-full text-lg font-semibold ${
-            adherenceRate >= 80 ? 'bg-[#d9f99d] text-[#166534]' :
-            adherenceRate >= 60 ? 'bg-[#fed7aa] text-[#ea580c]' :
+            adherenceRate >= 80 ? 'bg-[#d6f0e3] text-[#075a38]' :
+            adherenceRate >= 60 ? 'bg-[#dff2fc] text-[#1787c4]' :
             'bg-[#f1f5f9] text-[#64748b]'
           }`}>
             {client.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-display text-3xl font-semibold tracking-tight text-[#1c1446]">{client.full_name}</h1>
+              <h1 className="font-display text-3xl font-semibold tracking-tight text-[#0f2a3a]">{client.full_name}</h1>
               <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
-                adherenceRate >= 80 ? 'bg-[#d9f99d] text-[#15803d]' :
-                adherenceRate >= 60 ? 'bg-[#fed7aa] text-[#ea580c]' :
+                adherenceRate >= 80 ? 'bg-[#d6f0e3] text-[#075a38]' :
+                adherenceRate >= 60 ? 'bg-[#dff2fc] text-[#1787c4]' :
                 'bg-[#f1f5f9] text-[#64748b]'
               }`}>
                 {adherenceRate >= 80 ? 'On track' : adherenceRate >= 60 ? 'Needs attention' : 'At risk'}
@@ -257,13 +257,13 @@ export function ClientDetail() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setShowAddMeasurement(true)}
-            className="flex w-fit items-center gap-2 rounded-xl border border-[#f3dccf] bg-white px-4 py-3 text-xs font-semibold text-[#334155] hover:bg-[#fff4ec]"
+            className="flex w-fit items-center gap-2 rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-xs font-semibold text-[#334155] hover:bg-[#eef7fc]"
           >
             <Scale className="size-4" />Log measurement
           </button>
           <button
             onClick={handleOpenAssignPlan}
-            className="flex w-fit items-center gap-2 rounded-xl bg-[#ff4f1f] px-4 py-3 text-xs font-semibold text-white"
+            className="flex w-fit items-center gap-2 rounded-xl bg-[#f3263a] px-4 py-3 text-xs font-semibold text-white"
           >
             <Plus className="size-4" />Assign workout
           </button>
@@ -282,38 +282,38 @@ export function ClientDetail() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Key metrics</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Key metrics</h2>
               <p className="mt-1 text-xs text-[#64748b]">Progress at a glance</p>
             </div>
           </div>
           <div className="mt-6 space-y-4">
             {firstWeight && latestWeight && (
-              <div className="flex items-center justify-between rounded-xl bg-[#fff4ec] p-4">
+              <div className="flex items-center justify-between rounded-xl bg-[#eef7fc] p-4">
                 <div>
                   <p className="text-xs text-[#64748b]">Weight</p>
-                  <p className="text-lg font-semibold text-[#1c1446]">{latestWeight}kg</p>
+                  <p className="text-lg font-semibold text-[#0f2a3a]">{latestWeight}kg</p>
                 </div>
                 <span className={`text-xs font-semibold ${
-                  weightChange && weightChange < 0 ? 'text-[#15803d]' : 'text-[#ea580c]'
+                  weightChange && weightChange < 0 ? 'text-[#075a38]' : 'text-[#1787c4]'
                 }`}>
                   {weightChange && weightChange < 0 ? '↓' : weightChange && weightChange > 0 ? '↑' : ''} {weightChange ? Math.abs(weightChange).toFixed(1) : '0'}kg
                 </span>
               </div>
             )}
-            <div className="flex items-center justify-between rounded-xl bg-[#fff4ec] p-4">
+            <div className="flex items-center justify-between rounded-xl bg-[#eef7fc] p-4">
               <div>
                 <p className="text-xs text-[#64748b]">Workouts completed</p>
-                <p className="text-lg font-semibold text-[#1c1446]">{completedSessions}</p>
+                <p className="text-lg font-semibold text-[#0f2a3a]">{completedSessions}</p>
               </div>
-              <span className="text-xs font-semibold text-[#15803d]">{upcomingSessions} upcoming</span>
+              <span className="text-xs font-semibold text-[#075a38]">{upcomingSessions} upcoming</span>
             </div>
-            <div className="flex items-center justify-between rounded-xl bg-[#fff4ec] p-4">
+            <div className="flex items-center justify-between rounded-xl bg-[#eef7fc] p-4">
               <div>
                 <p className="text-xs text-[#64748b]">Adherence</p>
-                <p className="text-lg font-semibold text-[#1c1446]">{adherenceRate}%</p>
+                <p className="text-lg font-semibold text-[#0f2a3a]">{adherenceRate}%</p>
               </div>
               <span className={`text-xs font-semibold ${
-                adherenceRate >= 80 ? 'text-[#15803d]' : adherenceRate >= 60 ? 'text-[#ea580c]' : 'text-[#dc2626]'
+                adherenceRate >= 80 ? 'text-[#075a38]' : adherenceRate >= 60 ? 'text-[#1787c4]' : 'text-[#f3263a]'
               }`}>
                 {adherenceRate >= 80 ? 'Excellent' : adherenceRate >= 60 ? 'Good' : 'Needs work'}
               </span>
@@ -325,7 +325,7 @@ export function ClientDetail() {
       <section className="card p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-xl font-semibold text-[#1c1446]">Assigned plans</h2>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Assigned plans</h2>
             <p className="mt-1 text-xs text-[#64748b]">Workout programmes assigned to this client</p>
           </div>
         </div>
@@ -335,9 +335,9 @@ export function ClientDetail() {
               <Link
                 key={plan.id}
                 to={`/trainer/plans/${plan.id}/edit`}
-                className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4 hover:bg-[#fff4ec] transition"
+                className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4 hover:bg-[#eef7fc] transition"
               >
-                <div className="grid size-10 place-items-center rounded-xl bg-[#d9f99d] text-[#15803d]">
+                <div className="grid size-10 place-items-center rounded-xl bg-[#d6f0e3] text-[#075a38]">
                   <Dumbbell className="size-4" />
                 </div>
                 <div className="flex-1">
@@ -349,7 +349,7 @@ export function ClientDetail() {
             ))}
           </div>
         ) : (
-          <div className="mt-6 flex items-center justify-center rounded-xl bg-[#fff4ec] p-8">
+          <div className="mt-6 flex items-center justify-center rounded-xl bg-[#eef7fc] p-8">
             <p className="text-sm text-[#64748b]">No plans assigned yet. Use "Assign workout" above.</p>
           </div>
         )}
@@ -359,13 +359,13 @@ export function ClientDetail() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Progress photos</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Progress photos</h2>
               <p className="mt-1 text-xs text-[#64748b]">Visual progress over time</p>
             </div>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4">
             {photos.slice(0, 4).map((photo) => (
-              <div key={photo.id} className="aspect-square bg-[#fff4ec] rounded-2xl overflow-hidden">
+              <div key={photo.id} className="aspect-square bg-[#eef7fc] rounded-2xl overflow-hidden">
                 <img
                   src={photo.display_url}
                   alt={photo.caption || 'Progress photo'}
@@ -381,16 +381,16 @@ export function ClientDetail() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Recent workouts</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Recent workouts</h2>
               <p className="mt-1 text-xs text-[#64748b]">Latest session history</p>
             </div>
           </div>
           <div className="mt-6 space-y-3">
             {sessions.slice(0, 5).map((session) => ({ ...session, status: effectiveStatus(session) })).map((s) => (
-              <div key={s.id} className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
+              <div key={s.id} className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
                 <div className={`grid size-10 place-items-center rounded-xl ${
-                  s.status === 'completed' ? 'bg-[#d9f99d] text-[#15803d]' :
-                  s.status === 'missed' ? 'bg-[#fee2e2] text-[#dc2626]' :
+                  s.status === 'completed' ? 'bg-[#d6f0e3] text-[#075a38]' :
+                  s.status === 'missed' ? 'bg-[#fde3e6] text-[#f3263a]' :
                   'bg-[#f1f5f9] text-[#64748b]'
                 }`}>
                   {s.status === 'completed' ? <TrendingUp className="size-4" /> :
@@ -418,17 +418,17 @@ export function ClientDetail() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Recent activity</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Recent activity</h2>
               <p className="mt-1 text-xs text-[#64748b]">Latest updates and events</p>
             </div>
           </div>
           <div className="mt-6 space-y-3">
             {activity.slice(0, 5).map((event) => (
-              <div key={event.id} className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
+              <div key={event.id} className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
                 <div className={`grid size-10 place-items-center rounded-xl ${
-                  event.event_type === 'workout_completed' ? 'bg-[#d9f99d] text-[#15803d]' :
-                  event.event_type === 'measurement_logged' ? 'bg-[#fed7aa] text-[#ea580c]' :
-                  event.event_type === 'photo_uploaded' ? 'bg-[#ddd6fe] text-[#6d28d9]' :
+                  event.event_type === 'workout_completed' ? 'bg-[#d6f0e3] text-[#075a38]' :
+                  event.event_type === 'measurement_logged' ? 'bg-[#dff2fc] text-[#1787c4]' :
+                  event.event_type === 'photo_uploaded' ? 'bg-[#d4f4f9] text-[#0e7490]' :
                   'bg-[#f1f5f9] text-[#64748b]'
                 }`}>
                   {event.event_type === 'workout_completed' ? <TrendingUp className="size-4" /> :
@@ -450,7 +450,7 @@ export function ClientDetail() {
       {showAddMeasurement && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
           <div className="card p-6 max-w-sm w-full">
-            <h2 className="font-display text-xl font-semibold text-[#1c1446] mb-6">Log measurement</h2>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a] mb-6">Log measurement</h2>
             <div className="space-y-4">
               <div>
                 <label className="label">Weight (kg)</label>
@@ -528,7 +528,7 @@ export function ClientDetail() {
       {showAssignPlan && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
           <div className="card p-6 max-w-md w-full">
-            <h2 className="font-display text-xl font-semibold text-[#1c1446] mb-6">Assign workout plan</h2>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a] mb-6">Assign workout plan</h2>
             
             {availablePlans.length === 0 ? (
               <div className="text-center py-8">
@@ -550,7 +550,7 @@ export function ClientDetail() {
                   <select
                     value={selectedPlan || ''}
                     onChange={(e) => setSelectedPlan(e.target.value)}
-                    className="w-full rounded-xl border border-[#f3dccf] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ff8a4c]"
+                    className="w-full rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#68d6e8]"
                   >
                     <option value="">Choose a plan...</option>
                     {availablePlans.map((plan) => (
@@ -581,7 +581,7 @@ export function ClientDetail() {
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full rounded-xl border border-[#f3dccf] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ff8a4c]"
+                      className="w-full rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#68d6e8]"
                     />
                   </div>
                 )}

@@ -283,15 +283,15 @@ export function PlanBuilder() {
     <div className="flex flex-col gap-7">
       <button
         onClick={() => navigate('/trainer/plans')}
-        className="flex w-fit items-center gap-2 text-xs font-semibold text-[#7c3aed]"
+        className="flex w-fit items-center gap-2 text-xs font-semibold text-[#1787c4]"
       >
         ← Back to plans
       </button>
 
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#7c3aed]">Program builder</p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1c1446]">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#1787c4]">Program builder</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#0f2a3a]">
             {isEdit ? 'Edit plan' : 'New workout plan'}
           </h1>
           <p className="mt-2 text-sm text-[#64748b]">Build a training program with days and exercises.</p>
@@ -301,7 +301,7 @@ export function PlanBuilder() {
       <section className="card p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-xl font-semibold text-[#1c1446]">Plan details</h2>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Plan details</h2>
             <p className="mt-1 text-xs text-[#64748b]">Basic information about your program</p>
           </div>
         </div>
@@ -333,7 +333,7 @@ export function PlanBuilder() {
                 <select
                   value={selectedClient || ''}
                   onChange={(e) => setSelectedClient(e.target.value)}
-                  className="w-full rounded-xl border border-[#f3dccf] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ff8a4c]"
+                  className="w-full rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#68d6e8]"
                 >
                   <option value="">Save as template (assign later)</option>
                   {clients.map((clientLink) => (
@@ -365,7 +365,7 @@ export function PlanBuilder() {
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full rounded-xl border border-[#f3dccf] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ff8a4c]"
+                        className="w-full rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#68d6e8]"
                       />
                     </div>
                   )}
@@ -379,7 +379,7 @@ export function PlanBuilder() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="font-display text-xl font-semibold text-[#1c1446]">Training days</h2>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Training days</h2>
             <p className="mt-1 text-xs text-[#64748b]">Add exercises to each day</p>
           </div>
         </div>
@@ -387,7 +387,7 @@ export function PlanBuilder() {
           {days.map((day, dayIndex) => (
             <div key={dayIndex} className="card overflow-hidden">
               {/* Day header */}
-              <div className="flex items-center gap-3 p-4 bg-[#fff4ec]">
+              <div className="flex items-center gap-3 p-4 bg-[#eef7fc]">
                 <button
                   onClick={() => setExpandedDay(expandedDay === dayIndex ? null : dayIndex)}
                   className="btn-ghost p-1"
@@ -402,7 +402,7 @@ export function PlanBuilder() {
                     updated[dayIndex].title = e.target.value
                     setDays(updated)
                   }}
-                  className="flex-1 bg-transparent font-semibold text-[#1c1446] outline-none"
+                  className="flex-1 bg-transparent font-semibold text-[#0f2a3a] outline-none"
                   placeholder="Day title"
                 />
                 <span className="badge badge-lime">{day.exercises.length} exercises</span>
@@ -410,7 +410,7 @@ export function PlanBuilder() {
                   onClick={() => removeDay(dayIndex)}
                   className="btn-ghost p-1.5"
                 >
-                  <Trash2 size={16} className="text-[#dc2626]" />
+                  <Trash2 size={16} className="text-[#f3263a]" />
                 </button>
               </div>
 
@@ -418,7 +418,7 @@ export function PlanBuilder() {
               {expandedDay === dayIndex && (
                 <div className="p-4 space-y-3">
                   {day.exercises.map((ex, exIndex) => (
-                    <div key={exIndex} className="border border-[#f6e6dc] rounded-xl p-3 space-y-3">
+                    <div key={exIndex} className="border border-[#e3eff6] rounded-xl p-3 space-y-3">
                       <div className="flex items-center gap-2">
                         <Dumbbell size={16} className="text-[#64748b]" />
                         <input
@@ -432,7 +432,7 @@ export function PlanBuilder() {
                           onClick={() => removeExercise(dayIndex, exIndex)}
                           className="btn-ghost p-1"
                         >
-                          <Trash2 size={14} className="text-[#dc2626]" />
+                          <Trash2 size={14} className="text-[#f3263a]" />
                         </button>
                       </div>
                       <div className="grid grid-cols-4 gap-2">
@@ -479,7 +479,7 @@ export function PlanBuilder() {
 
                   <button
                     onClick={() => setShowExercisePicker(dayIndex)}
-                    className="w-full border-2 border-dashed border-[#f3dccf] rounded-xl py-3 text-sm text-[#64748b] hover:border-[#ff8a4c] hover:text-[#15803d] transition-all flex items-center justify-center gap-2"
+                    className="w-full border-2 border-dashed border-[#d9e9f2] rounded-xl py-3 text-sm text-[#64748b] hover:border-[#68d6e8] hover:text-[#075a38] transition-all flex items-center justify-center gap-2"
                   >
                     <Plus size={16} />
                     Add exercise
@@ -491,7 +491,7 @@ export function PlanBuilder() {
 
           <button
             onClick={addDay}
-            className="w-full border-2 border-dashed border-[#f3dccf] rounded-xl py-4 text-sm text-[#64748b] hover:border-[#ff8a4c] hover:text-[#15803d] transition-all flex items-center justify-center gap-2"
+            className="w-full border-2 border-dashed border-[#d9e9f2] rounded-xl py-4 text-sm text-[#64748b] hover:border-[#68d6e8] hover:text-[#075a38] transition-all flex items-center justify-center gap-2"
           >
             <Plus size={18} />
             Add day
@@ -514,7 +514,7 @@ export function PlanBuilder() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
           <div className="card p-6 max-w-lg w-full">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Add exercise</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Add exercise</h2>
               <button onClick={() => setShowExercisePicker(null)} aria-label="Close" className="btn-ghost p-1.5">
                 <X size={18} />
               </button>
@@ -526,13 +526,13 @@ export function PlanBuilder() {
                   <button
                     key={name}
                     onClick={() => showExercisePicker !== null && addExercise(showExercisePicker, name)}
-                    className="badge bg-[#fff4ec] text-[#1e293b] hover:bg-[#d9f99d] hover:text-[#15803d] transition-all cursor-pointer"
+                    className="badge bg-[#eef7fc] text-[#1e293b] hover:bg-[#d6f0e3] hover:text-[#075a38] transition-all cursor-pointer"
                   >
                     {name}
                   </button>
                 ))}
               </div>
-              <div className="border-t border-[#f1e4da] pt-3">
+              <div className="border-t border-[#dceaf2] pt-3">
                 <label className="label">Custom exercise</label>
                 <div className="flex gap-2">
                   <input

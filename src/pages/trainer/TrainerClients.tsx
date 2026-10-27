@@ -309,11 +309,11 @@ export function TrainerClients() {
     <div className="flex flex-col gap-7">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#7c3aed]">Your people</p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1c1446]">Clients</h1>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#1787c4]">Your people</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#0f2a3a]">Clients</h1>
           <p className="mt-2 text-sm text-[#64748b]">{clients.length} people in your coaching practice.</p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="flex w-fit items-center gap-2 rounded-xl bg-[#ff4f1f] px-4 py-3 text-xs font-semibold text-white">
+        <button onClick={() => setShowAdd(true)} className="flex w-fit items-center gap-2 rounded-xl bg-[#f3263a] px-4 py-3 text-xs font-semibold text-white">
           <Plus className="size-4" />Invite client
         </button>
       </div>
@@ -335,8 +335,8 @@ export function TrainerClients() {
               onClick={() => setFilter(f.id as any)}
               className={`rounded-xl border px-4 py-2 text-xs font-semibold transition ${
                 filter === f.id
-                  ? 'border-[#ff4f1f] bg-[#ff4f1f] text-white'
-                  : 'border-[#f3dccf] bg-white text-[#64748b] hover:bg-[#fff4ec]'
+                  ? 'border-[#28a9e8] bg-[#28a9e8] text-white'
+                  : 'border-[#d9e9f2] bg-white text-[#64748b] hover:bg-[#eef7fc]'
               }`}
             >
               {f.label}
@@ -345,7 +345,7 @@ export function TrainerClients() {
         </div>
       </div>
       {inviteNotice && (
-        <div className="flex items-start justify-between gap-4 rounded-xl bg-[#d9f99d] px-4 py-3 text-sm text-[#166534]">
+        <div className="flex items-start justify-between gap-4 rounded-xl bg-[#d6f0e3] px-4 py-3 text-sm text-[#075a38]">
           <span>{inviteNotice}</span>
           <button onClick={() => setInviteNotice('')} className="text-xs font-semibold">Dismiss</button>
         </div>
@@ -356,7 +356,7 @@ export function TrainerClients() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Pending invitations</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Pending invitations</h2>
               <p className="mt-1 text-xs text-[#64748b]">Clients waiting to join your practice</p>
             </div>
           </div>
@@ -364,8 +364,8 @@ export function TrainerClients() {
             {invitations
               .filter((i) => i.status === 'pending')
               .map((invitation) => (
-                <div key={invitation.id} className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
-                  <div className="grid size-10 place-items-center rounded-xl bg-[#fed7aa] text-[#ea580c]">
+                <div key={invitation.id} className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
+                  <div className="grid size-10 place-items-center rounded-xl bg-[#dff2fc] text-[#1787c4]">
                     <Mail className="size-4" />
                   </div>
                   <div className="flex-1">
@@ -374,7 +374,7 @@ export function TrainerClients() {
                   </div>
                   <button
                     onClick={() => handleCopyCode(invitation.invite_code)}
-                    className="flex items-center gap-1 rounded-lg border border-[#f3dccf] px-3 py-2 text-xs text-[#475569] hover:bg-[#fff4ec]"
+                    className="flex items-center gap-1 rounded-lg border border-[#d9e9f2] px-3 py-2 text-xs text-[#475569] hover:bg-[#eef7fc]"
                   >
                     {copiedCode === invitation.invite_code ? <Check size={14} /> : <Copy size={14} />}
                     {copiedCode === invitation.invite_code ? 'Copied' : 'Copy'}
@@ -382,7 +382,7 @@ export function TrainerClients() {
                   <button
                     onClick={() => handleResendEmail(invitation)}
                     disabled={sendingEmail === invitation.id}
-                    className="flex items-center gap-1 rounded-lg border border-[#f3dccf] px-3 py-2 text-xs text-[#475569] hover:bg-[#fff4ec]"
+                    className="flex items-center gap-1 rounded-lg border border-[#d9e9f2] px-3 py-2 text-xs text-[#475569] hover:bg-[#eef7fc]"
                   >
                     <Mail size={14} />
                     {sendingEmail === invitation.id ? 'Sending...' : 'Email'}
@@ -401,8 +401,8 @@ export function TrainerClients() {
 
       {/* Client list */}
       {filtered.length ? (
-        <div className="overflow-hidden rounded-2xl border border-[#f3dccf] bg-white">
-          <div className="hidden grid-cols-[1.5fr_1.2fr_.7fr_.8fr_32px] gap-4 border-b border-[#f1e4da] px-5 py-3 text-[10px] font-semibold uppercase tracking-[.12em] text-[#94a3b8] md:grid">
+        <div className="overflow-hidden rounded-2xl border border-[#d9e9f2] bg-white">
+          <div className="hidden grid-cols-[1.5fr_1.2fr_.7fr_.8fr_32px] gap-4 border-b border-[#dceaf2] px-5 py-3 text-[10px] font-semibold uppercase tracking-[.12em] text-[#94a3b8] md:grid">
             <span>Client</span>
             <span>Goal</span>
             <span>Progress</span>
@@ -413,14 +413,14 @@ export function TrainerClients() {
             <Link
               key={client.id}
               to={`/trainer/clients/${client.id}`}
-              className="grid w-full grid-cols-1 items-center gap-4 border-b border-[#f1e4da] px-5 py-4 last:border-0 hover:bg-[#fff4ec] transition md:grid-cols-[1.5fr_1.2fr_.7fr_.8fr_32px]"
+              className="grid w-full grid-cols-1 items-center gap-4 border-b border-[#dceaf2] px-5 py-4 last:border-0 hover:bg-[#eef7fc] transition md:grid-cols-[1.5fr_1.2fr_.7fr_.8fr_32px]"
             >
               <div className="flex items-center gap-3">
                 <div className={`grid size-9 shrink-0 place-items-center rounded-full text-xs font-semibold ${
-                  client.status === 'on_track' ? 'bg-[#d9f99d] text-[#15803d]' :
-                  client.status === 'at_risk' ? 'bg-[#fed7aa] text-[#ea580c]' :
+                  client.status === 'on_track' ? 'bg-[#d6f0e3] text-[#075a38]' :
+                  client.status === 'at_risk' ? 'bg-[#dff2fc] text-[#1787c4]' :
                   client.status === 'inactive' ? 'bg-[#f1f5f9] text-[#64748b]' :
-                  'bg-[#ddd6fe] text-[#6d28d9]'
+                  'bg-[#d4f4f9] text-[#0e7490]'
                 }`}>
                   {client.full_name.split(' ').map((n) => n[0]).join('').toUpperCase()}
                 </div>
@@ -441,7 +441,7 @@ export function TrainerClients() {
           ))}
         </div>
       ) : (
-        <div className="flex items-center justify-center rounded-2xl border border-[#f3dccf] bg-white p-12">
+        <div className="flex items-center justify-center rounded-2xl border border-[#d9e9f2] bg-white p-12">
           <p className="text-sm text-[#64748b]">
             {search || filter !== 'all' ? 'No clients match your search or filter' : 'No clients yet — invite your first client above'}
           </p>
@@ -452,7 +452,7 @@ export function TrainerClients() {
       {showAdd && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
           <div className="card p-6 max-w-sm w-full">
-            <h2 className="font-display text-xl font-semibold text-[#1c1446] mb-6">Invite client</h2>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a] mb-6">Invite client</h2>
             <div className="space-y-4">
               <div>
                 <label className="label">Client's email</label>
@@ -468,7 +468,7 @@ export function TrainerClients() {
                 </p>
               </div>
               {addError && (
-                <p className="text-xs text-[#dc2626]">{addError}</p>
+                <p className="text-xs text-[#f3263a]">{addError}</p>
               )}
               <div className="flex gap-3 mt-6">
                 <button

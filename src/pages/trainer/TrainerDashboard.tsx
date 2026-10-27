@@ -16,19 +16,19 @@ type AttentionItem = {
 }
 
 function StatCard({ label, value, detail, icon: Icon, accent = 'lime' }: { label: string; value: string; detail: string; icon: any; accent?: 'lime' | 'lavender' | 'peach' }) {
-  const bg = accent === 'lime' ? 'bg-[#d9f99d]' : accent === 'lavender' ? 'bg-[#ddd6fe]' : 'bg-[#fed7aa]'
-  const iconColor = accent === 'lime' ? 'text-[#3f6212]' : accent === 'lavender' ? 'text-[#6d28d9]' : 'text-[#ea580c]'
+  const bg = accent === 'lime' ? 'bg-[#d6f0e3]' : accent === 'lavender' ? 'bg-[#d4f4f9]' : 'bg-[#dff2fc]'
+  const iconColor = accent === 'lime' ? 'text-[#075a38]' : accent === 'lavender' ? 'text-[#0e7490]' : 'text-[#1787c4]'
   return (
     <div className={`stat-card ${bg}`}>
       <div className="flex items-start justify-between">
         <div className="label">{label}</div>
-        <div className="grid size-8 place-items-center rounded-xl bg-white/70 text-[#3f6212]">
+        <div className="grid size-8 place-items-center rounded-xl bg-white/70 text-[#075a38]">
           <Icon className="size-4" />
         </div>
       </div>
-      <div className="mt-5 font-display text-[30px] font-semibold tracking-tight text-[#1c1446]">{value}</div>
+      <div className="mt-5 font-display text-[30px] font-semibold tracking-tight text-[#0f2a3a]">{value}</div>
       <div className="mt-1 flex items-center gap-1 text-xs text-[#64748b]">
-        <TrendingUp className="size-3 text-[#16a34a]" />{detail}
+        <TrendingUp className="size-3 text-[#0b7a4b]" />{detail}
       </div>
     </div>
   )
@@ -40,12 +40,12 @@ function ProgressRing({ value, size = 108 }: { value: number; size?: number }) {
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg className="size-full -rotate-90" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r={r} fill="none" stroke="#ffe1d1" strokeWidth="8" />
-        <circle cx="50" cy="50" r={r} fill="none" stroke="#e63e10" strokeWidth="8" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - value / 100)} />
+        <circle cx="50" cy="50" r={r} fill="none" stroke="#dcecf5" strokeWidth="8" />
+        <circle cx="50" cy="50" r={r} fill="none" stroke="#28a9e8" strokeWidth="8" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - value / 100)} />
       </svg>
       <div className="absolute inset-0 grid place-items-center">
         <div className="text-center">
-          <div className="font-display text-[25px] font-semibold text-[#1c1446]">{value}%</div>
+          <div className="font-display text-[25px] font-semibold text-[#0f2a3a]">{value}%</div>
           <div className="text-[10px] uppercase tracking-[.12em] text-[#64748b]">complete</div>
         </div>
       </div>
@@ -348,7 +348,7 @@ export function TrainerDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-sm text-[#dc2626] bg-[#fee2e2] rounded-lg px-4 py-3 mb-4">{error}</p>
+          <p className="text-sm text-[#f3263a] bg-[#fde3e6] rounded-lg px-4 py-3 mb-4">{error}</p>
           <button onClick={loadDashboard} className="btn-primary">Retry</button>
         </div>
       </div>
@@ -359,13 +359,13 @@ export function TrainerDashboard() {
     <div className="flex flex-col gap-8">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#7c3aed]">{getDayName()}</p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1c1446]">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#1787c4]">{getDayName()}</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#0f2a3a]">
             {getGreeting()}, {firstName}.
           </h1>
           <p className="mt-2 text-sm text-[#64748b]">Here's what's happening with your clients today.</p>
         </div>
-        <Link to="/trainer/plans/new" className="flex w-fit items-center gap-2 rounded-xl bg-[#ff4f1f] px-4 py-3 text-xs font-semibold text-white shadow-lg shadow-[#ff4f1f]/10">
+        <Link to="/trainer/plans/new" className="flex w-fit items-center gap-2 rounded-xl bg-[#f3263a] px-4 py-3 text-xs font-semibold text-white shadow-lg shadow-[#f3263a]/10">
           <Plus className="size-4" />Create plan
         </Link>
       </div>
@@ -374,10 +374,10 @@ export function TrainerDashboard() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Today's progress</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Today's progress</h2>
               <p className="mt-1 text-xs text-[#64748b]">Your coaching rhythm, at a glance</p>
             </div>
-            <Link to="/trainer/clients" className="text-xs font-semibold text-[#7c3aed]">
+            <Link to="/trainer/clients" className="text-xs font-semibold text-[#1787c4]">
               View clients <ArrowUpRight className="ml-1 inline size-3" />
             </Link>
           </div>
@@ -385,16 +385,16 @@ export function TrainerDashboard() {
             <div className="flex items-center gap-6">
               <ProgressRing value={getCompletionRate()} />
               <div>
-                <div className="text-3xl font-semibold text-[#1c1446]">
+                <div className="text-3xl font-semibold text-[#0f2a3a]">
                   {todayStats.completed} <span className="text-base font-normal text-[#94a3b8]">/ {todayStats.total}</span>
                 </div>
                 <p className="mt-1 text-xs text-[#64748b]">sessions completed</p>
               </div>
             </div>
-            <div className="h-px flex-1 bg-[#f1e4da] md:h-20 md:w-px" />
+            <div className="h-px flex-1 bg-[#dceaf2] md:h-20 md:w-px" />
             <div className="flex flex-1 flex-col gap-4">
               <div className="flex items-center gap-3">
-                <div className="grid size-10 place-items-center rounded-xl bg-[#d9f99d] text-[#15803d]">
+                <div className="grid size-10 place-items-center rounded-xl bg-[#d6f0e3] text-[#075a38]">
                   <TrendingUp className="size-4" />
                 </div>
                 <div>
@@ -403,7 +403,7 @@ export function TrainerDashboard() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="grid size-10 place-items-center rounded-xl bg-[#ddd6fe] text-[#6d28d9]">
+                <div className="grid size-10 place-items-center rounded-xl bg-[#d4f4f9] text-[#0e7490]">
                   <Users className="size-4" />
                 </div>
                 <div>
@@ -419,12 +419,12 @@ export function TrainerDashboard() {
           <section className="card p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="font-display text-xl font-semibold text-[#1c1446]">Pending goal reviews</h2>
+                <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Pending goal reviews</h2>
                 <p className="mt-1 text-xs text-[#64748b]">Clients waiting for goal confirmation</p>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="size-4 text-[#7c3aed]" />
-                <span className="text-xs font-semibold text-[#7c3aed]">{pendingGoalReviews.length} pending</span>
+                <CheckCircle className="size-4 text-[#1787c4]" />
+                <span className="text-xs font-semibold text-[#1787c4]">{pendingGoalReviews.length} pending</span>
               </div>
             </div>
             <div className="space-y-4">
@@ -452,10 +452,10 @@ export function TrainerDashboard() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Needs attention</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Needs attention</h2>
               <p className="mt-1 text-xs text-[#64748b]">Clients who need your help</p>
             </div>
-            <Link to="/trainer/clients" className="text-xs font-semibold text-[#7c3aed]">
+            <Link to="/trainer/clients" className="text-xs font-semibold text-[#1787c4]">
               View all <ArrowUpRight className="ml-1 inline size-3" />
             </Link>
           </div>
@@ -465,12 +465,12 @@ export function TrainerDashboard() {
                 <Link
                   key={item.clientId}
                   to={`/trainer/clients/${item.clientId}`}
-                  className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4 hover:bg-[#fff4ec] transition"
+                  className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4 hover:bg-[#eef7fc] transition"
                 >
                   <div className={`grid size-10 place-items-center rounded-full ${
-                    item.reason === 'missed_workout' ? 'bg-[#fee2e2] text-[#dc2626]' :
-                    item.reason === 'no_activity' ? 'bg-[#fed7aa] text-[#ea580c]' :
-                    'bg-[#d9f99d] text-[#15803d]'
+                    item.reason === 'missed_workout' ? 'bg-[#fde3e6] text-[#f3263a]' :
+                    item.reason === 'no_activity' ? 'bg-[#dff2fc] text-[#1787c4]' :
+                    'bg-[#d6f0e3] text-[#075a38]'
                   }`}>
                     {item.reason === 'missed_workout' ? '!' :
                      item.reason === 'no_activity' ? '⚠' :
@@ -484,7 +484,7 @@ export function TrainerDashboard() {
                 </Link>
               ))
             ) : (
-              <div className="flex items-center justify-center rounded-xl bg-[#fff4ec] p-8">
+              <div className="flex items-center justify-center rounded-xl bg-[#eef7fc] p-8">
                 <p className="text-sm text-[#64748b]">All clients are on track ✓</p>
               </div>
             )}
@@ -518,17 +518,17 @@ export function TrainerDashboard() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Recent activity</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Recent activity</h2>
               <p className="mt-1 text-xs text-[#64748b]">Latest updates from your clients</p>
             </div>
           </div>
           <div className="mt-6 space-y-3">
             {recentActivity.map((event) => (
-              <div key={event.id} className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
+              <div key={event.id} className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
                 <div className={`grid size-10 place-items-center rounded-xl ${
-                  event.event_type === 'workout_completed' ? 'bg-[#d9f99d] text-[#15803d]' :
-                  event.event_type === 'measurement_logged' ? 'bg-[#fed7aa] text-[#ea580c]' :
-                  event.event_type === 'photo_uploaded' ? 'bg-[#ddd6fe] text-[#6d28d9]' :
+                  event.event_type === 'workout_completed' ? 'bg-[#d6f0e3] text-[#075a38]' :
+                  event.event_type === 'measurement_logged' ? 'bg-[#dff2fc] text-[#1787c4]' :
+                  event.event_type === 'photo_uploaded' ? 'bg-[#d4f4f9] text-[#0e7490]' :
                   'bg-[#f1f5f9] text-[#64748b]'
                 }`}>
                   {event.event_type === 'workout_completed' ? <TrendingUp className="size-4" /> :

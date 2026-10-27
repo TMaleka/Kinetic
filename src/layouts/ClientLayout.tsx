@@ -44,7 +44,7 @@ export function ClientLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#fffaf6] flex">
+    <div className="min-h-screen bg-[#f7fbfd] flex">
       <Sidebar role={role} screen={screen} setScreen={handleScreenChange} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar role={role} setScreen={handleScreenChange} />

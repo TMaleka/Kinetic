@@ -32,7 +32,7 @@ export function WeeklyActivityChart({ sessions, title = 'Progress overview' }: {
     <section className="card p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-xl font-semibold text-[#1c1446]">{title}</h2>
+          <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">{title}</h2>
           <p className="mt-1 text-xs text-[#64748b]">
             {totalCompleted} workouts completed in the last {weeks} weeks
           </p>
@@ -40,23 +40,23 @@ export function WeeklyActivityChart({ sessions, title = 'Progress overview' }: {
         <select
           value={weeks}
           onChange={(e) => setWeeks(Number(e.target.value) as (typeof RANGES)[number])}
-          className="rounded-lg border border-[#f3dccf] bg-white px-3 py-2 text-xs text-[#475569] outline-none hover:bg-[#fff4ec]"
+          className="rounded-lg border border-[#d9e9f2] bg-white px-3 py-2 text-xs text-[#475569] outline-none hover:bg-[#eef7fc]"
         >
           {RANGES.map((r) => (
             <option key={r} value={r}>{r} weeks</option>
           ))}
         </select>
       </div>
-      <div className="mt-8 flex h-44 items-end gap-2 border-b border-[#f1e4da] px-2">
+      <div className="mt-8 flex h-44 items-end gap-2 border-b border-[#dceaf2] px-2">
         {data.map((d) => (
           <div
             key={d.label}
             className="relative flex h-full flex-1 items-end"
             title={`Week of ${d.label}: ${d.completed}/${d.scheduled} completed`}
           >
-            <div className="absolute bottom-0 w-full rounded-t-md bg-[#ffe6d8]" style={{ height: `${(d.scheduled / max) * 100}%` }} />
+            <div className="absolute bottom-0 w-full rounded-t-md bg-[#e0f2fb]" style={{ height: `${(d.scheduled / max) * 100}%` }} />
             <div
-              className="relative w-full rounded-t-md bg-[#ff4f1f] transition-all hover:bg-[#e63e10]"
+              className="relative w-full rounded-t-md bg-[#28a9e8] transition-all hover:bg-[#1787c4]"
               style={{ height: `${(d.completed / max) * 100}%` }}
             />
           </div>

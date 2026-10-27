@@ -104,8 +104,8 @@ export function ClientProfile() {
     <div className="flex flex-col gap-7">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#7c3aed]">Your account</p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1c1446]">Profile</h1>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#1787c4]">Your account</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#0f2a3a]">Profile</h1>
           <p className="mt-2 text-sm text-[#64748b]">Manage your personal information.</p>
         </div>
       </div>
@@ -115,14 +115,14 @@ export function ClientProfile() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Pending invitations</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Pending invitations</h2>
               <p className="mt-1 text-xs text-[#64748b]">Trainers waiting to connect</p>
             </div>
           </div>
           <div className="mt-6 space-y-3">
             {invitations.map((invitation) => (
-              <div key={invitation.id} className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
-                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d9f99d] text-[#15803d]">
+              <div key={invitation.id} className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
+                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d6f0e3] text-[#075a38]">
                   <UserPlus className="size-4" />
                 </div>
                 <div className="flex-1">
@@ -132,7 +132,7 @@ export function ClientProfile() {
                 <button
                   onClick={() => handleAcceptInvitation(invitation.id)}
                   disabled={accepting === invitation.id}
-                  className="flex items-center gap-2 rounded-xl bg-[#ff4f1f] px-4 py-3 text-xs font-semibold text-white"
+                  className="flex items-center gap-2 rounded-xl bg-[#f3263a] px-4 py-3 text-xs font-semibold text-white"
                 >
                   {accepting === invitation.id ? 'Accepting...' : 'Accept'}
                 </button>
@@ -147,12 +147,12 @@ export function ClientProfile() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Your trainer</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Your trainer</h2>
               <p className="mt-1 text-xs text-[#64748b]">Assigned fitness professional</p>
             </div>
           </div>
-          <div className="mt-6 flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
-            <div className="grid size-12 shrink-0 place-items-center rounded-full bg-[#ddd6fe] text-[#5b21b6] text-sm font-semibold">
+          <div className="mt-6 flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
+            <div className="grid size-12 shrink-0 place-items-center rounded-full bg-[#d4f4f9] text-[#0e7490] text-sm font-semibold">
               {trainer.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
             </div>
             <div className="flex-1">
@@ -163,7 +163,7 @@ export function ClientProfile() {
             </div>
           </div>
           {trainer.bio && (
-            <div className="mt-4 rounded-xl bg-[#fff4ec] p-4">
+            <div className="mt-4 rounded-xl bg-[#eef7fc] p-4">
               <p className="text-xs text-[#475569]">{trainer.bio}</p>
             </div>
           )}
@@ -173,7 +173,7 @@ export function ClientProfile() {
       <section className="card p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-xl font-semibold text-[#1c1446]">Personal information</h2>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Personal information</h2>
             <p className="mt-1 text-xs text-[#64748b]">Your account details</p>
           </div>
           {!editing && (
@@ -183,7 +183,7 @@ export function ClientProfile() {
                 setPhone(profile.phone || '')
                 setEditing(true)
               }}
-              className="flex items-center gap-2 rounded-lg border border-[#f3dccf] px-3 py-2 text-xs text-[#475569]"
+              className="flex items-center gap-2 rounded-lg border border-[#d9e9f2] px-3 py-2 text-xs text-[#475569]"
             >
               Edit
             </button>
@@ -221,8 +221,8 @@ export function ClientProfile() {
           </div>
         ) : (
           <div className="mt-6 space-y-4">
-            <div className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d9f99d] text-[#15803d]">
+            <div className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d6f0e3] text-[#075a38]">
                 <User className="size-4" />
               </div>
               <div className="flex-1">
@@ -230,8 +230,8 @@ export function ClientProfile() {
                 <p className="text-sm font-semibold text-[#1e293b]">{profile.full_name}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ddd6fe] text-[#6d28d9]">
+            <div className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d4f4f9] text-[#0e7490]">
                 <Mail className="size-4" />
               </div>
               <div className="flex-1">
@@ -240,8 +240,8 @@ export function ClientProfile() {
               </div>
             </div>
             {profile.phone && (
-              <div className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
-                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fed7aa] text-[#ea580c]">
+              <div className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
+                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#dff2fc] text-[#1787c4]">
                   <User className="size-4" />
                 </div>
                 <div className="flex-1">
@@ -250,8 +250,8 @@ export function ClientProfile() {
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fed7aa] text-[#ea580c]">
+            <div className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#dff2fc] text-[#1787c4]">
                 <Calendar className="size-4" />
               </div>
               <div className="flex-1">
@@ -265,7 +265,7 @@ export function ClientProfile() {
 
       <button
         onClick={handleSignOut}
-        className="flex w-fit items-center gap-2 rounded-xl border border-[#f3dccf] bg-white px-4 py-3 text-xs font-semibold text-[#dc2626] hover:bg-[#fee2e2] transition"
+        className="flex w-fit items-center gap-2 rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-xs font-semibold text-[#f3263a] hover:bg-[#fde3e6] transition"
       >
         <LogOut className="size-4" />Sign out
       </button>

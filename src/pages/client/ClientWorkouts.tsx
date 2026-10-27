@@ -161,8 +161,8 @@ export function ClientWorkouts() {
     <div className="flex flex-col gap-7">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#7c3aed]">Your fitness</p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1c1446]">Workouts</h1>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#1787c4]">Your fitness</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#0f2a3a]">Workouts</h1>
           <p className="mt-2 text-sm text-[#64748b]">Track your training progress.</p>
         </div>
       </div>
@@ -171,7 +171,7 @@ export function ClientWorkouts() {
       <section className="card p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-xl font-semibold text-[#1c1446]">This week</h2>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">This week</h2>
             <p className="mt-1 text-xs text-[#64748b]">Your weekly schedule</p>
           </div>
         </div>
@@ -180,20 +180,20 @@ export function ClientWorkouts() {
             <div
               key={day.date}
               className={`text-center py-3 border-b-2 ${
-                day.isToday ? 'border-[#ff4f1f]' : 'border-[#f1e4da]'
+                day.isToday ? 'border-[#28a9e8]' : 'border-[#dceaf2]'
               }`}
             >
               <p className={`text-[10px] font-semibold uppercase tracking-[.12em] ${
-                day.isToday ? 'text-[#1c1446]' : 'text-[#94a3b8]'
+                day.isToday ? 'text-[#0f2a3a]' : 'text-[#94a3b8]'
               }`}>
                 {day.day}
               </p>
               {day.session ? (
                 <Link to={`/app/workouts/${day.session.id}`} title={day.session.title} className="mt-2 block">
                   <div className={`grid size-8 mx-auto place-items-center rounded-full ${
-                    day.session.status === 'completed' ? 'bg-[#d9f99d] text-[#15803d]' :
-                    day.session.status === 'missed' ? 'bg-[#fee2e2] text-[#dc2626]' :
-                    day.session.status === 'in_progress' ? 'bg-[#fed7aa] text-[#ea580c]' :
+                    day.session.status === 'completed' ? 'bg-[#d6f0e3] text-[#075a38]' :
+                    day.session.status === 'missed' ? 'bg-[#fde3e6] text-[#f3263a]' :
+                    day.session.status === 'in_progress' ? 'bg-[#dff2fc] text-[#1787c4]' :
                     'bg-[#f1f5f9] text-[#64748b]'
                   }`}>
                     {statusIcon(day.session.status) || <Calendar className="size-4" />}
@@ -214,7 +214,7 @@ export function ClientWorkouts() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Upcoming</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Upcoming</h2>
               <p className="mt-1 text-xs text-[#64748b]">Scheduled workouts</p>
             </div>
           </div>
@@ -223,9 +223,9 @@ export function ClientWorkouts() {
               <Link
                 key={s.id}
                 to={`/app/workouts/${s.id}`}
-                className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4 hover:bg-[#fff4ec] transition"
+                className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4 hover:bg-[#eef7fc] transition"
               >
-                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fed7aa] text-[#ea580c]">
+                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#dff2fc] text-[#1787c4]">
                   <Calendar className="size-4" />
                 </div>
                 <div className="flex-1">
@@ -244,7 +244,7 @@ export function ClientWorkouts() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Completed</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Completed</h2>
               <p className="mt-1 text-xs text-[#64748b]">{completed.length} workouts finished</p>
             </div>
           </div>
@@ -253,9 +253,9 @@ export function ClientWorkouts() {
               <Link
                 key={s.id}
                 to={`/app/workouts/${s.id}`}
-                className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4 hover:bg-[#fff4ec] transition"
+                className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4 hover:bg-[#eef7fc] transition"
               >
-                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d9f99d] text-[#15803d]">
+                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d6f0e3] text-[#075a38]">
                   <CheckCircle2 className="size-4" />
                 </div>
                 <div className="flex-1">
@@ -263,7 +263,7 @@ export function ClientWorkouts() {
                   <p className="text-xs text-[#64748b]">{formatDate(s.scheduled_date)}</p>
                 </div>
                 {s.feeling && (
-                  <span className="text-[#ea580c]">{'★'.repeat(s.feeling)}</span>
+                  <span className="text-[#1787c4]">{'★'.repeat(s.feeling)}</span>
                 )}
                 <ChevronRight className="size-4 text-[#94a3b8]" />
               </Link>
@@ -277,21 +277,21 @@ export function ClientWorkouts() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#1c1446]">Missed</h2>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Missed</h2>
               <p className="mt-1 text-xs text-[#64748b]">{missed.length} workouts missed</p>
             </div>
           </div>
           <div className="mt-6 space-y-3">
             {missed.map((s) => (
-              <Link key={s.id} to={`/app/workouts/${s.id}`} className="flex items-center gap-4 rounded-xl border border-[#f6e6dc] p-4 opacity-60 hover:opacity-100 transition">
-                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fee2e2] text-[#dc2626]">
+              <Link key={s.id} to={`/app/workouts/${s.id}`} className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4 opacity-60 hover:opacity-100 transition">
+                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fde3e6] text-[#f3263a]">
                   <XCircle className="size-4" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-[#1e293b]">{s.title}</p>
                   <p className="text-xs text-[#64748b]">{formatDate(s.scheduled_date)}</p>
                 </div>
-                <span className="badge bg-[#fee2e2] text-[#dc2626]">Missed</span>
+                <span className="badge bg-[#fde3e6] text-[#f3263a]">Missed</span>
               </Link>
             ))}
           </div>
@@ -299,7 +299,7 @@ export function ClientWorkouts() {
       )}
 
       {sessions.length === 0 && (
-        <div className="flex items-center justify-center rounded-2xl border border-[#f3dccf] bg-white p-12">
+        <div className="flex items-center justify-center rounded-2xl border border-[#d9e9f2] bg-white p-12">
           <p className="text-sm text-[#64748b]">No workouts scheduled yet.</p>
         </div>
       )}
