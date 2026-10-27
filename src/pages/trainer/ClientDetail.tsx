@@ -79,6 +79,7 @@ export function ClientDetail() {
         .select('*')
         .eq('client_id', clientId)
         .order('logged_at', { ascending: true })
+        .order('created_at', { ascending: true })
 
       const { data: photoData } = await supabase
         .from('progress_photos')

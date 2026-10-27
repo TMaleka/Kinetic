@@ -102,6 +102,7 @@ export function ClientProgress() {
         .select('*')
         .eq('client_id', profile.id)
         .order('logged_at', { ascending: true })
+        .order('created_at', { ascending: true })
       setMeasurements(mData || [])
 
       const { data: pData } = await supabase

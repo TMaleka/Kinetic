@@ -15,9 +15,8 @@ export function TrainerLayout({ children }: { children: ReactNode }) {
     const path = location.pathname
     if (path === '/trainer') return 'dashboard'
     if (path === '/trainer/clients') return 'clients'
-    if (path.startsWith('/trainer/clients/')) return 'client-detail'
+    if (path.startsWith('/trainer/clients/')) return 'clients'
     if (path === '/trainer/plans') return 'plans'
-    if (path === '/trainer/plans/new') return 'builder'
     if (path.startsWith('/trainer/plans/')) return 'plans'
     if (path === '/trainer/profile') return 'profile'
     return 'dashboard'

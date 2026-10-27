@@ -102,6 +102,7 @@ export function ClientDashboard() {
         .eq('client_id', profile.id)
         .not('body_weight', 'is', null)
         .order('logged_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(2)
       
       if (weightData && weightData.length > 0) {

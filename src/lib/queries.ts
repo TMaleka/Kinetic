@@ -79,6 +79,7 @@ export async function fetchClientMeasurements(clientId: string) {
     .select('*')
     .eq('client_id', clientId)
     .order('logged_at', { ascending: true })
+        .order('created_at', { ascending: true })
   if (error) throw error
   return data
 }
