@@ -206,7 +206,7 @@ export function AuthPage() {
               setMode(mode === 'signup' ? 'signin' : 'signup')
               setError('')
             }}
-            className="text-[#15803d] font-semibold hover:underline"
+            className="text-[#ff4f1f] font-semibold hover:underline"
           >
             {mode === 'signup' ? 'Sign in' : 'Sign up'}
           </button>
