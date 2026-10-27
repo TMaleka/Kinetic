@@ -1,6 +1,5 @@
-import { type ReactNode, useState } from 'react'
+import { type ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
 import Sidebar from '../components/Sidebar'
 import Topbar from '../components/Topbar'
 import MobileNav from '../components/MobileNav'
@@ -8,7 +7,6 @@ import MobileNav from '../components/MobileNav'
 type Screen = 'dashboard' | 'clients' | 'client-detail' | 'plans' | 'builder' | 'progress' | 'workouts' | 'profile' | 'session'
 
 export function TrainerLayout({ children }: { children: ReactNode }) {
-  const { signOut, profile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const role: 'trainer' | 'client' = 'trainer'
@@ -17,22 +15,16 @@ export function TrainerLayout({ children }: { children: ReactNode }) {
     const path = location.pathname
     if (path === '/trainer') return 'dashboard'
     if (path === '/trainer/clients') return 'clients'
-    if (path.startsWith('/trainer/clients/')) return 'client-detail'
+    if (path.startsWith('/trainer/clients/')) return 'clients'
     if (path === '/trainer/plans') return 'plans'
-    if (path === '/trainer/plans/new') return 'builder'
+    if (path.startsWith('/trainer/plans/')) return 'plans'
     if (path === '/trainer/profile') return 'profile'
     return 'dashboard'
   }
 
-  const [screen, setScreen] = useState<Screen>(getScreenFromPath())
-
-  const handleSignOut = async () => {
-    await signOut()
-    navigate('/')
-  }
+  const screen = getScreenFromPath()
 
   const handleScreenChange = (newScreen: Screen) => {
-    setScreen(newScreen)
     switch (newScreen) {
       case 'dashboard':
         navigate('/trainer')
@@ -55,7 +47,7 @@ export function TrainerLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#fbfbf8] flex">
+    <div className="min-h-screen bg-[#f7fbfd] flex">
       <Sidebar role={role} screen={screen} setScreen={handleScreenChange} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar role={role} setScreen={handleScreenChange} />

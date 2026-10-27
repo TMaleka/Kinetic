@@ -13,11 +13,13 @@ export function AuthPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setNotice('')
     setLoading(true)
 
     try {
@@ -28,6 +30,13 @@ export function AuthPage() {
           options: { data: { full_name: fullName, role } },
         })
         if (error) throw error
+
+        if (!data.session) {
+          // Email confirmation is enabled: there is no session until the user confirms.
+          setNotice('Account created. Check your email to confirm your address, then sign in.')
+          setMode('signin')
+          return
+        }
 
         // Update profile with role and name
         if (data.user) {
@@ -53,26 +62,26 @@ export function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#fbfbf8]">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[#f7fbfd]">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-[#25342d] text-white mb-4">
+          <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-[#28a9e8] text-white mb-4">
             <Dumbbell size={32} />
           </div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-[#25342d]">KineTic</h1>
-          <p className="text-sm text-[#7c857c] mt-2">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-[#0f2a3a]">KineTic</h1>
+          <p className="text-sm text-[#64748b] mt-2">
             {mode === 'signup' ? 'Create your account' : 'Welcome back'}
           </p>
         </div>
 
         <div className="card p-6">
           {/* Mode toggle */}
-          <div className="flex gap-1 p-1 bg-[#f0f1eb] rounded-xl mb-6">
+          <div className="flex gap-1 p-1 bg-[#f1f5f9] rounded-xl mb-6">
             <button
               type="button"
               onClick={() => setMode('signup')}
               className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
-                mode === 'signup' ? 'bg-white text-[#25342d] shadow-sm' : 'text-[#8d978d]'
+                mode === 'signup' ? 'bg-white text-[#0f2a3a] shadow-sm' : 'text-[#64748b]'
               }`}
             >
               Sign up
@@ -81,7 +90,7 @@ export function AuthPage() {
               type="button"
               onClick={() => setMode('signin')}
               className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
-                mode === 'signin' ? 'bg-white text-[#25342d] shadow-sm' : 'text-[#8d978d]'
+                mode === 'signin' ? 'bg-white text-[#0f2a3a] shadow-sm' : 'text-[#64748b]'
               }`}
             >
               Sign in
@@ -110,24 +119,24 @@ export function AuthPage() {
                       onClick={() => setRole('trainer')}
                       className={`p-4 rounded-xl border-2 text-left transition-all ${
                         role === 'trainer'
-                          ? 'border-[#c0d568] bg-[#edf3d5]'
-                          : 'border-[#e5e7dd] hover:border-[#c0d568]'
+                          ? 'border-[#28a9e8] bg-[#e0f3fc]'
+                          : 'border-[#d9e9f2] hover:border-[#68d6e8]'
                       }`}
                     >
-                      <p className="font-semibold text-[#25342d]">Trainer</p>
-                      <p className="text-xs text-[#969f96] mt-0.5">Coach clients</p>
+                      <p className="font-semibold text-[#0f2a3a]">Trainer</p>
+                      <p className="text-xs text-[#64748b] mt-0.5">Coach clients</p>
                     </button>
                     <button
                       type="button"
                       onClick={() => setRole('client')}
                       className={`p-4 rounded-xl border-2 text-left transition-all ${
                         role === 'client'
-                          ? 'border-[#c0d568] bg-[#edf3d5]'
-                          : 'border-[#e5e7dd] hover:border-[#c0d568]'
+                          ? 'border-[#28a9e8] bg-[#e0f3fc]'
+                          : 'border-[#d9e9f2] hover:border-[#68d6e8]'
                       }`}
                     >
-                      <p className="font-semibold text-[#25342d]">Client</p>
-                      <p className="text-xs text-[#969f96] mt-0.5">Get coached</p>
+                      <p className="font-semibold text-[#0f2a3a]">Client</p>
+                      <p className="text-xs text-[#64748b] mt-0.5">Get coached</p>
                     </button>
                   </div>
                 </div>
@@ -168,8 +177,11 @@ export function AuthPage() {
               </div>
             </div>
 
+            {notice && (
+              <p className="rounded-lg bg-[#d6f0e3] px-4 py-3 text-sm text-[#075a38]">{notice}</p>
+            )}
             {error && (
-              <div className="text-sm text-[#8b4a4a] bg-[#f5d5d5] rounded-lg px-3 py-2">
+              <div className="text-sm text-[#f3263a] bg-[#fde3e6] rounded-lg px-3 py-2">
                 {error}
               </div>
             )}
@@ -184,13 +196,17 @@ export function AuthPage() {
           </form>
         </div>
 
-        <p className="text-center text-sm text-[#969f96] mt-6">
+        <p className="text-center text-sm text-[#64748b] mt-6">
           {mode === 'signup'
             ? 'Already have an account? '
             : "Don't have an account? "}
           <button
-            onClick={() => setMode(mode === 'signup' ? 'signin' : 'signup')}
-            className="text-[#718b33] font-semibold hover:underline"
+            type="button"
+            onClick={() => {
+              setMode(mode === 'signup' ? 'signin' : 'signup')
+              setError('')
+            }}
+            className="text-[#f3263a] font-semibold hover:underline"
           >
             {mode === 'signup' ? 'Sign in' : 'Sign up'}
           </button>

@@ -7,7 +7,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-[#fbfbf8] text-[#25342d] antialiased;
+    @apply bg-[#f7fbfd] text-[#0f2a3a] antialiased;
     font-family: 'DM Sans', sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
@@ -18,19 +18,19 @@
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-[#f8f8f4];
+    @apply bg-[#eef7fc];
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-[#e5e6dc] rounded-none;
+    @apply bg-[#d9e9f2] rounded-none;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-[#d5d6cc];
+    @apply bg-[#cbd5e1];
   }
 }
 
 @layer components {
   .card {
-    @apply bg-white rounded-2xl border border-[#e5e7dd];
+    @apply bg-white rounded-2xl border border-[#d9e9f2];
   }
 
   .page-header {
@@ -38,35 +38,35 @@
   }
 
   .sidebar {
-    @apply hidden w-[226px] shrink-0 flex-col border-r border-[#e6e7dc] bg-[#f8f8f4] px-5 py-7 lg:flex;
+    @apply hidden w-[226px] shrink-0 flex-col border-r border-[#d9e9f2] bg-[#eef7fc] px-5 py-7 lg:flex;
   }
 
   .topbar {
-    @apply flex items-center justify-between border-b border-[#e6e7dc] bg-[#fbfbf8] px-5 py-4 lg:px-10;
+    @apply flex items-center justify-between border-b border-[#d9e9f2] bg-[#f7fbfd] px-5 py-4 lg:px-10;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 bg-[#25342d] text-white px-4 py-3 text-xs font-semibold rounded-xl hover:bg-[#1a2520] active:scale-[0.98] transition-all;
+    @apply inline-flex items-center justify-center gap-2 bg-[#f3263a] text-white px-4 py-3 text-xs font-semibold rounded-xl hover:bg-[#d01a2d] active:scale-[0.98] transition-all;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 bg-white text-[#596359] px-4 py-3 text-xs font-semibold rounded-xl border border-[#e5e7dd] hover:bg-[#f8f8f4] active:scale-[0.98] transition-all;
+    @apply inline-flex items-center justify-center gap-2 bg-white text-[#334155] px-4 py-3 text-xs font-semibold rounded-xl border border-[#d9e9f2] hover:bg-[#eef7fc] active:scale-[0.98] transition-all;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 text-[#7a8178] hover:bg-[#eef0e7] active:scale-[0.98] transition-all rounded-xl px-3 py-3 text-[13px] font-medium;
+    @apply inline-flex items-center justify-center gap-2 text-[#475569] hover:bg-[#e0f2fb] active:scale-[0.98] transition-all rounded-xl px-3 py-3 text-[13px] font-medium;
   }
 
   .btn-accent {
-    @apply inline-flex items-center justify-center gap-2 bg-[#c8db7a] text-[#30402d] px-4 py-3 text-xs font-bold rounded-xl hover:bg-[#b8c76a] active:scale-[0.98] transition-all;
+    @apply inline-flex items-center justify-center gap-2 bg-[#68d6e8] text-[#0f2a3a] px-4 py-3 text-xs font-bold rounded-xl hover:bg-[#28a9e8] active:scale-[0.98] transition-all;
   }
 
   .input {
-    @apply w-full h-11 rounded-xl border border-[#e5e7dd] bg-white px-4 text-sm outline-none placeholder:text-[#adb3ab] focus:ring-2 focus:ring-[#c0d568];
+    @apply w-full h-11 rounded-xl border border-[#d9e9f2] bg-white px-4 text-sm outline-none placeholder:text-[#94a3b8] focus:ring-2 focus:ring-[#68d6e8];
   }
 
   .label {
-    @apply block text-[11px] font-semibold uppercase tracking-[.1em] text-[#788176];
+    @apply block text-[11px] font-semibold uppercase tracking-[.1em] text-[#475569];
   }
 
   .badge {
@@ -74,27 +74,27 @@
   }
 
   .badge-lime {
-    @apply badge bg-[#edf3d5] text-[#718b33];
+    @apply badge bg-[#d6f0e3] text-[#075a38];
   }
 
   .badge-lavender {
-    @apply badge bg-[#eee8f3] text-[#6b5a7a];
+    @apply badge bg-[#d4f4f9] text-[#0e7490];
   }
 
   .badge-peach {
-    @apply badge bg-[#f7eadb] text-[#ad784b];
+    @apply badge bg-[#dff2fc] text-[#1787c4];
   }
 
   .badge-success {
-    @apply badge bg-[#edf3d5] text-[#718b33];
+    @apply badge bg-[#d6f0e3] text-[#075a38];
   }
 
   .badge-warning {
-    @apply badge bg-[#f7eadb] text-[#ad784b];
+    @apply badge bg-[#dff2fc] text-[#1787c4];
   }
 
   .badge-error {
-    @apply badge bg-[#f5d5d5] text-[#8b4a4a];
+    @apply badge bg-[#fde3e6] text-[#f3263a];
   }
 
   .stat-card {
@@ -102,14 +102,14 @@
   }
 
   .stat-card-lime {
-    @apply stat-card bg-[#edf3d5];
+    @apply stat-card bg-[#d6f0e3];
   }
 
   .stat-card-lavender {
-    @apply stat-card bg-[#eee8f3];
+    @apply stat-card bg-[#d4f4f9];
   }
 
   .stat-card-peach {
-    @apply stat-card bg-[#f7eadb];
+    @apply stat-card bg-[#dff2fc];
   }
 }

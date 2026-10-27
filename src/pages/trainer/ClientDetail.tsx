@@ -1,24 +1,26 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, ChevronRight, TrendingUp, Flame, Dumbbell, Plus, Target } from 'lucide-react'
+import { ChevronRight, TrendingUp, Flame, Dumbbell, Plus, Target, Scale } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { formatDate, formatRelative, fetchClientActivity, addActivityEvent, scheduleSessionsFromPlan, todayISO, toLocalISO, addDays } from '../../lib/queries'
+import { formatDate, formatRelative, fetchClientActivity, addActivityEvent, scheduleSessionsFromPlan, todayISO, effectiveStatus, adherencePercent, computeStreak, withSignedPhotoUrls } from '../../lib/queries'
+import { createNotification } from '../../lib/notifications'
+import { WeeklyActivityChart } from '../../components/WeeklyActivityChart'
 
 function StatCard({ label, value, detail, icon: Icon, accent = 'lime' }: { label: string; value: string; detail: string; icon: any; accent?: 'lime' | 'lavender' | 'peach' }) {
-  const bg = accent === 'lime' ? 'bg-[#edf3d5]' : accent === 'lavender' ? 'bg-[#eee8f3]' : 'bg-[#f7eadb]'
+  const bg = accent === 'lime' ? 'bg-[#d6f0e3]' : accent === 'lavender' ? 'bg-[#d4f4f9]' : 'bg-[#dff2fc]'
   return (
     <div className={`stat-card ${bg}`}>
       <div className="flex items-start justify-between">
         <div className="label">{label}</div>
-        <div className="grid size-8 place-items-center rounded-xl bg-white/70 text-[#65722f]">
+        <div className="grid size-8 place-items-center rounded-xl bg-white/70 text-[#075a38]">
           <Icon className="size-4" />
         </div>
       </div>
-      <div className="mt-5 font-display text-[30px] font-semibold tracking-tight text-[#25342d]">{value}</div>
-      <div className="mt-1 flex items-center gap-1 text-xs text-[#778078]">
-        <TrendingUp className="size-3 text-[#8da74a]" />{detail}
+      <div className="mt-5 font-display text-[30px] font-semibold tracking-tight text-[#0f2a3a]">{value}</div>
+      <div className="mt-1 flex items-center gap-1 text-xs text-[#64748b]">
+        <TrendingUp className="size-3 text-[#0b7a4b]" />{detail}
       </div>
     </div>
   )
@@ -77,6 +79,7 @@ export function ClientDetail() {
         .select('*')
         .eq('client_id', clientId)
         .order('logged_at', { ascending: true })
+        .order('created_at', { ascending: true })
 
       const { data: photoData } = await supabase
         .from('progress_photos')
@@ -96,7 +99,7 @@ export function ClientDetail() {
       setLink(linkData)
       setSessions(sessionData || [])
       setMeasurements(measurementData || [])
-      setPhotos(photoData || [])
+      setPhotos(await withSignedPhotoUrls(photoData || []))
       setPlans(planData || [])
       setActivity(activityData || [])
     } catch (err) {
@@ -126,20 +129,33 @@ export function ClientDetail() {
     setScheduling(true)
     try {
       // Update plan to assign to client
-      const { error: updateError } = await supabase
+      const { data: updatedPlan, error: updateError } = await supabase
         .from('workout_plans')
         .update({ client_id: clientId })
         .eq('id', selectedPlan)
+        .select('id')
+        .maybeSingle()
 
       if (updateError) throw updateError
+      if (!updatedPlan) throw new Error('Plan could not be updated (not found or permission denied)')
 
       // Schedule sessions if requested
       if (scheduleSessions) {
         const result = await scheduleSessionsFromPlan(selectedPlan, clientId, profile.id, startDate)
         if (!result.success) {
           console.error('Failed to schedule sessions:', result.message)
+          alert(`Plan assigned, but sessions could not be scheduled, so the client won't see any workouts yet. Error: ${result.message}`)
         }
       }
+
+      const planTitle = availablePlans.find((p) => p.id === selectedPlan)?.title || 'a new workout plan'
+      await createNotification(
+        clientId,
+        'plan_assigned',
+        'New workout plan',
+        `${profile.full_name || 'Your trainer'} assigned you "${planTitle}".`,
+        { plan_id: selectedPlan },
+      )
 
       // Log activity
       await addActivityEvent(
@@ -155,6 +171,7 @@ export function ClientDetail() {
       loadData()
     } catch (err) {
       console.error(err)
+      alert(`Failed to assign plan: ${(err as { message?: string })?.message || 'Unknown error'}`)
     } finally {
       setScheduling(false)
     }
@@ -183,9 +200,10 @@ export function ClientDetail() {
   }
 
   const completedSessions = sessions.filter((s) => s.status === 'completed').length
-  const adherenceRate = sessions.length > 0
-    ? Math.round((completedSessions / sessions.length) * 100)
-    : 0
+  const dueSessions = sessions.filter((s) => s.scheduled_date <= todayISO()).length
+  const upcomingSessions = sessions.filter((s) => effectiveStatus(s) === 'scheduled' || effectiveStatus(s) === 'in_progress').length
+  const adherenceRate = adherencePercent(sessions)
+  const streak = computeStreak(sessions)
 
   const weightData = measurements
     .filter((m) => m.body_weight != null)
@@ -208,110 +226,94 @@ export function ClientDetail() {
 
   return (
     <div className="flex flex-col gap-7">
-      <button onClick={() => window.history.back()} className="flex w-fit items-center gap-2 text-xs font-semibold text-[#7f927d]">
+      <Link to="/trainer/clients" className="flex w-fit items-center gap-2 text-xs font-semibold text-[#1787c4]">
         ← Back to clients
-      </button>
+      </Link>
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
         <div className="flex items-center gap-4">
           <div className={`grid size-16 shrink-0 place-items-center rounded-full text-lg font-semibold ${
-            adherenceRate >= 80 ? 'bg-[#edf3d5] text-[#4d604c]' :
-            adherenceRate >= 60 ? 'bg-[#f7eadb] text-[#ad784b]' :
-            'bg-[#f0f1eb] text-[#8d978d]'
+            adherenceRate >= 80 ? 'bg-[#d6f0e3] text-[#075a38]' :
+            adherenceRate >= 60 ? 'bg-[#dff2fc] text-[#1787c4]' :
+            'bg-[#f1f5f9] text-[#64748b]'
           }`}>
             {client.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-display text-3xl font-semibold tracking-tight text-[#25342d]">{client.full_name}</h1>
+              <h1 className="font-display text-3xl font-semibold tracking-tight text-[#0f2a3a]">{client.full_name}</h1>
               <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
-                adherenceRate >= 80 ? 'bg-[#edf3d5] text-[#718b33]' :
-                adherenceRate >= 60 ? 'bg-[#f7eadb] text-[#ad784b]' :
-                'bg-[#f0f1eb] text-[#8d978d]'
+                adherenceRate >= 80 ? 'bg-[#d6f0e3] text-[#075a38]' :
+                adherenceRate >= 60 ? 'bg-[#dff2fc] text-[#1787c4]' :
+                'bg-[#f1f5f9] text-[#64748b]'
               }`}>
                 {adherenceRate >= 80 ? 'On track' : adherenceRate >= 60 ? 'Needs attention' : 'At risk'}
               </span>
             </div>
-            <p className="mt-1 text-sm text-[#808980]">
+            <p className="mt-1 text-sm text-[#64748b]">
               {link?.goals || 'No goal set'} · Member since {new Date(client.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
             </p>
           </div>
         </div>
-        <button
-          onClick={handleOpenAssignPlan}
-          className="flex w-fit items-center gap-2 rounded-xl bg-[#25342d] px-4 py-3 text-xs font-semibold text-white"
-        >
-          <Plus className="size-4" />Assign workout
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setShowAddMeasurement(true)}
+            className="flex w-fit items-center gap-2 rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-xs font-semibold text-[#334155] hover:bg-[#eef7fc]"
+          >
+            <Scale className="size-4" />Log measurement
+          </button>
+          <button
+            onClick={handleOpenAssignPlan}
+            className="flex w-fit items-center gap-2 rounded-xl bg-[#f3263a] px-4 py-3 text-xs font-semibold text-white"
+          >
+            <Plus className="size-4" />Assign workout
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Weekly adherence" value={`${adherenceRate}%`} detail={adherenceRate > 70 ? '+12% vs last month' : 'Needs improvement'} icon={TrendingUp} />
-        <StatCard label="Current streak" value={`${sessions.length} days`} detail="Personal best" icon={Flame} accent="peach" />
-        <StatCard label="Strength score" value="78" detail="+8 points this month" icon={Dumbbell} accent="lavender" />
+        <StatCard label="Adherence" value={`${adherenceRate}%`} detail={`${completedSessions} of ${dueSessions} due sessions completed`} icon={TrendingUp} />
+        <StatCard label="Current streak" value={`${streak} ${streak === 1 ? 'day' : 'days'}`} detail="Consecutive days with a completed workout" icon={Flame} accent="peach" />
+        <StatCard label="Completed workouts" value={String(completedSessions)} detail={`${upcomingSessions} upcoming`} icon={Dumbbell} accent="lavender" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
-        <section className="card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Progress overview</h2>
-              <p className="mt-1 text-xs text-[#929990]">Last 8 weeks</p>
-            </div>
-            <button className="rounded-lg border border-[#e5e7dd] px-3 py-2 text-xs text-[#69746a]">8 weeks⌄</button>
-          </div>
-          <div className="mt-8 flex h-44 items-end gap-3 border-b border-[#eceee5] px-2">
-            {[38, 48, 43, 65, 58, 72, 68, 83, 78, 92].map((v, i) => (
-              <div key={i} className="flex flex-1 items-end">
-                <div
-                  className="w-full rounded-t-md bg-[#b9cd69] transition-all hover:bg-[#a5bd55]"
-                  style={{ height: `${v}%` }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex justify-between text-[10px] text-[#a1a8a0]">
-            <span>May</span>
-            <span>Jun</span>
-            <span>Jul</span>
-            <span>Aug</span>
-          </div>
-        </section>
+        <WeeklyActivityChart sessions={sessions} />
 
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Key metrics</h2>
-              <p className="mt-1 text-xs text-[#929990]">Progress at a glance</p>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Key metrics</h2>
+              <p className="mt-1 text-xs text-[#64748b]">Progress at a glance</p>
             </div>
           </div>
           <div className="mt-6 space-y-4">
             {firstWeight && latestWeight && (
-              <div className="flex items-center justify-between rounded-xl bg-[#f8f8f4] p-4">
+              <div className="flex items-center justify-between rounded-xl bg-[#eef7fc] p-4">
                 <div>
-                  <p className="text-xs text-[#969f96]">Weight</p>
-                  <p className="text-lg font-semibold text-[#25342d]">{latestWeight}kg</p>
+                  <p className="text-xs text-[#64748b]">Weight</p>
+                  <p className="text-lg font-semibold text-[#0f2a3a]">{latestWeight}kg</p>
                 </div>
                 <span className={`text-xs font-semibold ${
-                  weightChange && weightChange < 0 ? 'text-[#718b33]' : 'text-[#ad784b]'
+                  weightChange && weightChange < 0 ? 'text-[#075a38]' : 'text-[#1787c4]'
                 }`}>
                   {weightChange && weightChange < 0 ? '↓' : weightChange && weightChange > 0 ? '↑' : ''} {weightChange ? Math.abs(weightChange).toFixed(1) : '0'}kg
                 </span>
               </div>
             )}
-            <div className="flex items-center justify-between rounded-xl bg-[#f8f8f4] p-4">
+            <div className="flex items-center justify-between rounded-xl bg-[#eef7fc] p-4">
               <div>
-                <p className="text-xs text-[#969f96]">Workouts</p>
-                <p className="text-lg font-semibold text-[#25342d]">{sessions.length}</p>
+                <p className="text-xs text-[#64748b]">Workouts completed</p>
+                <p className="text-lg font-semibold text-[#0f2a3a]">{completedSessions}</p>
               </div>
-              <span className="text-xs font-semibold text-[#718b33]">+{sessions.length > 0 ? sessions.length : 0}</span>
+              <span className="text-xs font-semibold text-[#075a38]">{upcomingSessions} upcoming</span>
             </div>
-            <div className="flex items-center justify-between rounded-xl bg-[#f8f8f4] p-4">
+            <div className="flex items-center justify-between rounded-xl bg-[#eef7fc] p-4">
               <div>
-                <p className="text-xs text-[#969f96]">Adherence</p>
-                <p className="text-lg font-semibold text-[#25342d]">{adherenceRate}%</p>
+                <p className="text-xs text-[#64748b]">Adherence</p>
+                <p className="text-lg font-semibold text-[#0f2a3a]">{adherenceRate}%</p>
               </div>
               <span className={`text-xs font-semibold ${
-                adherenceRate >= 80 ? 'text-[#718b33]' : adherenceRate >= 60 ? 'text-[#ad784b]' : 'text-[#8b4a4a]'
+                adherenceRate >= 80 ? 'text-[#075a38]' : adherenceRate >= 60 ? 'text-[#1787c4]' : 'text-[#f3263a]'
               }`}>
                 {adherenceRate >= 80 ? 'Excellent' : adherenceRate >= 60 ? 'Good' : 'Needs work'}
               </span>
@@ -320,19 +322,52 @@ export function ClientDetail() {
         </section>
       </div>
 
+      <section className="card p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Assigned plans</h2>
+            <p className="mt-1 text-xs text-[#64748b]">Workout programmes assigned to this client</p>
+          </div>
+        </div>
+        {plans.length > 0 ? (
+          <div className="mt-6 space-y-3">
+            {plans.map((plan) => (
+              <Link
+                key={plan.id}
+                to={`/trainer/plans/${plan.id}/edit`}
+                className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4 hover:bg-[#eef7fc] transition"
+              >
+                <div className="grid size-10 place-items-center rounded-xl bg-[#d6f0e3] text-[#075a38]">
+                  <Dumbbell className="size-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-[#1e293b]">{plan.title}</p>
+                  <p className="text-xs text-[#64748b]">Assigned {formatDate(plan.updated_at || plan.created_at)}</p>
+                </div>
+                <ChevronRight className="size-4 text-[#94a3b8]" />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-6 flex items-center justify-center rounded-xl bg-[#eef7fc] p-8">
+            <p className="text-sm text-[#64748b]">No plans assigned yet. Use "Assign workout" above.</p>
+          </div>
+        )}
+      </section>
+
       {photos.length > 0 && (
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Progress photos</h2>
-              <p className="mt-1 text-xs text-[#929990]">Visual progress over time</p>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Progress photos</h2>
+              <p className="mt-1 text-xs text-[#64748b]">Visual progress over time</p>
             </div>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4">
             {photos.slice(0, 4).map((photo) => (
-              <div key={photo.id} className="aspect-square bg-[#f8f8f4] rounded-2xl overflow-hidden">
+              <div key={photo.id} className="aspect-square bg-[#eef7fc] rounded-2xl overflow-hidden">
                 <img
-                  src={photo.photo_url}
+                  src={photo.display_url}
                   alt={photo.caption || 'Progress photo'}
                   className="w-full h-full object-cover"
                 />
@@ -346,32 +381,32 @@ export function ClientDetail() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Recent workouts</h2>
-              <p className="mt-1 text-xs text-[#929990]">Latest session history</p>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Recent workouts</h2>
+              <p className="mt-1 text-xs text-[#64748b]">Latest session history</p>
             </div>
           </div>
           <div className="mt-6 space-y-3">
-            {sessions.slice(0, 5).map((s) => (
-              <div key={s.id} className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
+            {sessions.slice(0, 5).map((session) => ({ ...session, status: effectiveStatus(session) })).map((s) => (
+              <div key={s.id} className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
                 <div className={`grid size-10 place-items-center rounded-xl ${
-                  s.status === 'completed' ? 'bg-[#edf3d5] text-[#718b33]' :
-                  s.status === 'missed' ? 'bg-[#f5d5d5] text-[#8b4a4a]' :
-                  'bg-[#f0f1eb] text-[#8d978d]'
+                  s.status === 'completed' ? 'bg-[#d6f0e3] text-[#075a38]' :
+                  s.status === 'missed' ? 'bg-[#fde3e6] text-[#f3263a]' :
+                  'bg-[#f1f5f9] text-[#64748b]'
                 }`}>
                   {s.status === 'completed' ? <TrendingUp className="size-4" /> :
                    s.status === 'missed' ? <Target className="size-4" /> :
                    <Dumbbell className="size-4" />}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-[#3d4b40]">{s.title}</p>
-                  <p className="text-xs text-[#969f96]">{formatDate(s.scheduled_date)}</p>
+                  <p className="text-sm font-semibold text-[#1e293b]">{s.title}</p>
+                  <p className="text-xs text-[#64748b]">{formatDate(s.scheduled_date)}</p>
                 </div>
                 <span className={`badge ${
                   s.status === 'completed' ? 'badge-lime' :
                   s.status === 'missed' ? 'badge-error' :
-                  'bg-[#f0f1eb] text-[#8d978d]'
+                  'bg-[#f1f5f9] text-[#64748b]'
                 }`}>
-                  {s.status}
+                  {s.status.replace('_', ' ')}
                 </span>
               </div>
             ))}
@@ -383,18 +418,18 @@ export function ClientDetail() {
         <section className="card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-xl font-semibold text-[#25342d]">Recent activity</h2>
-              <p className="mt-1 text-xs text-[#929990]">Latest updates and events</p>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Recent activity</h2>
+              <p className="mt-1 text-xs text-[#64748b]">Latest updates and events</p>
             </div>
           </div>
           <div className="mt-6 space-y-3">
             {activity.slice(0, 5).map((event) => (
-              <div key={event.id} className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
+              <div key={event.id} className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
                 <div className={`grid size-10 place-items-center rounded-xl ${
-                  event.event_type === 'workout_completed' ? 'bg-[#edf3d5] text-[#718b33]' :
-                  event.event_type === 'measurement_logged' ? 'bg-[#f7eadb] text-[#ad784b]' :
-                  event.event_type === 'photo_uploaded' ? 'bg-[#eee8f3] text-[#6b5a7a]' :
-                  'bg-[#f0f1eb] text-[#8d978d]'
+                  event.event_type === 'workout_completed' ? 'bg-[#d6f0e3] text-[#075a38]' :
+                  event.event_type === 'measurement_logged' ? 'bg-[#dff2fc] text-[#1787c4]' :
+                  event.event_type === 'photo_uploaded' ? 'bg-[#d4f4f9] text-[#0e7490]' :
+                  'bg-[#f1f5f9] text-[#64748b]'
                 }`}>
                   {event.event_type === 'workout_completed' ? <TrendingUp className="size-4" /> :
                    event.event_type === 'measurement_logged' ? <Target className="size-4" /> :
@@ -402,8 +437,8 @@ export function ClientDetail() {
                    <Flame className="size-4" />}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-[#3d4b40]">{event.title}</p>
-                  <p className="text-xs text-[#969f96]">{formatRelative(event.created_at)}</p>
+                  <p className="text-sm font-semibold text-[#1e293b]">{event.title}</p>
+                  <p className="text-xs text-[#64748b]">{formatRelative(event.created_at)}</p>
                 </div>
               </div>
             ))}
@@ -415,7 +450,7 @@ export function ClientDetail() {
       {showAddMeasurement && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
           <div className="card p-6 max-w-sm w-full">
-            <h2 className="font-display text-xl font-semibold text-[#25342d] mb-6">Log measurement</h2>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a] mb-6">Log measurement</h2>
             <div className="space-y-4">
               <div>
                 <label className="label">Weight (kg)</label>
@@ -465,7 +500,12 @@ export function ClientDetail() {
                     if (measurementWaist.trim()) data.waist = parseFloat(measurementWaist)
                     
                     if (Object.keys(data).length > 1) {
-                      await supabase.from('measurements').insert(data)
+                      const { error } = await supabase.from('measurements').insert(data)
+                      if (error) {
+                        alert(`Failed to save measurement: ${error.message}`)
+                        return
+                      }
+                      await addActivityEvent(clientId!, profile?.id || null, 'measurement_logged', 'Trainer logged new measurements')
                       setShowAddMeasurement(false)
                       setMeasurementWeight('')
                       setMeasurementChest('')
@@ -488,15 +528,15 @@ export function ClientDetail() {
       {showAssignPlan && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
           <div className="card p-6 max-w-md w-full">
-            <h2 className="font-display text-xl font-semibold text-[#25342d] mb-6">Assign workout plan</h2>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a] mb-6">Assign workout plan</h2>
             
             {availablePlans.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-sm text-[#969f96] mb-4">
+                <p className="text-sm text-[#64748b] mb-4">
                   No workout plans available. Create one first.
                 </p>
                 <Link
-                  to="/trainer/plans"
+                  to="/trainer/plans/new"
                   className="btn-primary"
                   onClick={() => setShowAssignPlan(false)}
                 >
@@ -510,7 +550,7 @@ export function ClientDetail() {
                   <select
                     value={selectedPlan || ''}
                     onChange={(e) => setSelectedPlan(e.target.value)}
-                    className="w-full rounded-xl border border-[#e5e7dd] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#c0d568]"
+                    className="w-full rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#68d6e8]"
                   >
                     <option value="">Choose a plan...</option>
                     {availablePlans.map((plan) => (
@@ -529,7 +569,7 @@ export function ClientDetail() {
                     onChange={(e) => setScheduleSessions(e.target.checked)}
                     className="w-5 h-5 rounded"
                   />
-                  <label htmlFor="scheduleSessions" className="text-sm text-[#3d4b40]">
+                  <label htmlFor="scheduleSessions" className="text-sm text-[#1e293b]">
                     Schedule sessions automatically
                   </label>
                 </div>
@@ -541,7 +581,7 @@ export function ClientDetail() {
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full rounded-xl border border-[#e5e7dd] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#c0d568]"
+                      className="w-full rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#68d6e8]"
                     />
                   </div>
                 )}

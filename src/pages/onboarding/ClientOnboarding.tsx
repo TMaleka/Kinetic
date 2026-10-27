@@ -17,6 +17,11 @@ export function ClientOnboarding() {
   const [startingWeight, setStartingWeight] = useState('')
   const [targetWeight, setTargetWeight] = useState('')
   const [timeline, setTimeline] = useState('')
+  const [height, setHeight] = useState('')
+  const [activityLevel, setActivityLevel] = useState('')
+  const [injuries, setInjuries] = useState('')
+  const [additionalTargets, setAdditionalTargets] = useState('')
+  const [error, setError] = useState('')
 
   const handleNext = () => {
     if (step === 'goal') setStep('starting')
@@ -29,31 +34,41 @@ export function ClientOnboarding() {
   }
 
   const handleSubmit = async () => {
+    if (!profile) return
     setLoading(true)
+    setError('')
     try {
-      // Save onboarding data to database and mark onboarding as complete
-      if (profile) {
-        // Update the onboarding_completed flag in the database
-        const { error } = await supabase
-          .from('profiles')
-          .update({ onboarding_completed: true })
-          .eq('id', profile.id)
+      const { error: goalError } = await supabase.from('client_goals').insert({
+        client_id: profile.id,
+        goal,
+        starting_weight: startingWeight ? parseFloat(startingWeight) : null,
+        target_weight: targetWeight ? parseFloat(targetWeight) : null,
+        timeline: timeline || null,
+        starting_height: height ? parseFloat(height) : null,
+        activity_level: activityLevel || null,
+        injuries: injuries || null,
+        additional_targets: additionalTargets || null,
+      })
+      if (goalError) throw goalError
 
-        if (error) {
-          console.error('Failed to complete onboarding:', error)
-          // Even if database update fails, allow user to proceed
-        }
-
-        // Refresh the profile to get updated onboarding status
-        await refreshProfile()
+      if (startingWeight) {
+        const { error: measurementError } = await supabase
+          .from('measurements')
+          .insert({ client_id: profile.id, body_weight: parseFloat(startingWeight) })
+        if (measurementError) console.error('Failed to save starting weight:', measurementError)
       }
 
-      // Navigate to app after completion
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ onboarding_completed: true })
+        .eq('id', profile.id)
+      if (profileError) throw profileError
+
+      await refreshProfile()
       navigate('/app')
-    } catch (error) {
-      console.error('Onboarding error:', error)
-      // Even on error, allow user to proceed to avoid blocking
-      navigate('/app')
+    } catch (err: any) {
+      console.error('Onboarding error:', err)
+      setError(`Could not save your details: ${err?.message || 'Unknown error'}. Please try again.`)
     } finally {
       setLoading(false)
     }
@@ -65,11 +80,11 @@ export function ClientOnboarding() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <div className="grid size-16 place-items-center rounded-full bg-[#edf3d5] text-[#718b33] mx-auto mb-4">
+              <div className="grid size-16 place-items-center rounded-full bg-[#d6f0e3] text-[#075a38] mx-auto mb-4">
                 <Target className="size-8" />
               </div>
-              <h2 className="font-display text-2xl font-semibold text-[#25342d]">My goal</h2>
-              <p className="mt-2 text-sm text-[#7c857c]">What are you working towards?</p>
+              <h2 className="font-display text-2xl font-semibold text-[#0f2a3a]">My goal</h2>
+              <p className="mt-2 text-sm text-[#64748b]">What are you working towards?</p>
             </div>
             
             <div className="space-y-4">
@@ -89,8 +104,8 @@ export function ClientOnboarding() {
                     onClick={() => setGoal(option)}
                     className={`rounded-xl border p-4 text-left text-sm transition ${
                       goal === option
-                        ? 'border-[#25342d] bg-[#25342d] text-white'
-                        : 'border-[#e5e7dd] hover:border-[#25342d] hover:bg-[#f8f8f4]'
+                        ? 'border-[#28a9e8] bg-[#28a9e8] text-white'
+                        : 'border-[#d9e9f2] hover:border-[#28a9e8] hover:bg-[#eef7fc]'
                     }`}
                   >
                     {option}
@@ -105,11 +120,11 @@ export function ClientOnboarding() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <div className="grid size-16 place-items-center rounded-full bg-[#f7eadb] text-[#ad784b] mx-auto mb-4">
+              <div className="grid size-16 place-items-center rounded-full bg-[#dff2fc] text-[#1787c4] mx-auto mb-4">
                 <Scale className="size-8" />
               </div>
-              <h2 className="font-display text-2xl font-semibold text-[#25342d]">My starting point</h2>
-              <p className="mt-2 text-sm text-[#7c857c]">KineTic asks for the relevant baseline</p>
+              <h2 className="font-display text-2xl font-semibold text-[#0f2a3a]">My starting point</h2>
+              <p className="mt-2 text-sm text-[#64748b]">KineTic asks for the relevant baseline</p>
             </div>
             
             <div className="space-y-4">
@@ -129,6 +144,8 @@ export function ClientOnboarding() {
                 <label className="label">Height (cm)</label>
                 <input
                   type="number"
+                  value={height}
+                  onChange={(e) => setHeight(e.target.value)}
                   placeholder="175"
                   className="input"
                 />
@@ -136,7 +153,7 @@ export function ClientOnboarding() {
               
               <div>
                 <label className="label">Current activity level</label>
-                <select className="input">
+                <select value={activityLevel} onChange={(e) => setActivityLevel(e.target.value)} className="input">
                   <option value="">Select activity level</option>
                   <option value="sedentary">Sedentary (little to no exercise)</option>
                   <option value="light">Light (1-3 days/week)</option>
@@ -149,6 +166,8 @@ export function ClientOnboarding() {
               <div>
                 <label className="label">Any injuries or limitations?</label>
                 <textarea
+                  value={injuries}
+                  onChange={(e) => setInjuries(e.target.value)}
                   placeholder="Describe any injuries, medical conditions, or physical limitations..."
                   rows={3}
                   className="input resize-none"
@@ -162,11 +181,11 @@ export function ClientOnboarding() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <div className="grid size-16 place-items-center rounded-full bg-[#eee8f3] text-[#6b5a7a] mx-auto mb-4">
+              <div className="grid size-16 place-items-center rounded-full bg-[#d4f4f9] text-[#0e7490] mx-auto mb-4">
                 <Activity className="size-8" />
               </div>
-              <h2 className="font-display text-2xl font-semibold text-[#25342d]">My target</h2>
-              <p className="mt-2 text-sm text-[#7c857c]">Where would you like to get to?</p>
+              <h2 className="font-display text-2xl font-semibold text-[#0f2a3a]">My target</h2>
+              <p className="mt-2 text-sm text-[#64748b]">Where would you like to get to?</p>
             </div>
             
             <div className="space-y-4">
@@ -201,14 +220,16 @@ export function ClientOnboarding() {
               <div>
                 <label className="label">Additional targets (optional)</label>
                 <textarea
+                  value={additionalTargets}
+                  onChange={(e) => setAdditionalTargets(e.target.value)}
                   placeholder="e.g., Run 5km in 25 minutes, bench press 100kg..."
                   rows={3}
                   className="input resize-none"
                 />
               </div>
               
-              <div className="rounded-xl bg-[#f8f8f4] p-4">
-                <p className="text-sm text-[#6b756a]">
+              <div className="rounded-xl bg-[#eef7fc] p-4">
+                <p className="text-sm text-[#475569]">
                   You can update these targets later. Once you connect with a trainer, they can review and adjust these goals based on their expertise.
                 </p>
               </div>
@@ -231,18 +252,18 @@ export function ClientOnboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fbfbf8] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#f7fbfd] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Progress indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-[#93a84e]">Step {getStepNumber()} of 3</span>
+            <span className="text-xs font-semibold text-[#1787c4]">Step {getStepNumber()} of 3</span>
             <div className="flex gap-1">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
                   className={`h-1.5 w-8 rounded-full transition ${
-                    i <= getStepNumber() ? 'bg-[#25342d]' : 'bg-[#e5e7dd]'
+                    i <= getStepNumber() ? 'bg-[#28a9e8]' : 'bg-[#d9e9f2]'
                   }`}
                 />
               ))}
@@ -254,6 +275,10 @@ export function ClientOnboarding() {
         <div className="card p-8">
           {renderStep()}
         </div>
+
+        {error && (
+          <p className="mt-4 rounded-lg bg-[#fde3e6] px-4 py-3 text-sm text-[#f3263a]">{error}</p>
+        )}
 
         {/* Navigation buttons */}
         <div className="mt-6 flex gap-3">

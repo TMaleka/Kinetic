@@ -45,12 +45,12 @@ export function TrainerGoalReview({ goalRequest, onConfirm, onAdjust, onReject }
     return (
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="grid size-12 place-items-center rounded-full bg-[#edf3d5] text-[#718b33]">
+          <div className="grid size-12 place-items-center rounded-full bg-[#d6f0e3] text-[#075a38]">
             <Check className="size-6" />
           </div>
           <div>
-            <h3 className="font-display text-xl font-semibold text-[#25342d]">Goal confirmed</h3>
-            <p className="text-sm text-[#7c857c]">The client can now start their training program</p>
+            <h3 className="font-display text-xl font-semibold text-[#0f2a3a]">Goal confirmed</h3>
+            <p className="text-sm text-[#64748b]">The client can now start their training program</p>
           </div>
         </div>
       </div>
@@ -61,12 +61,12 @@ export function TrainerGoalReview({ goalRequest, onConfirm, onAdjust, onReject }
     return (
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="grid size-12 place-items-center rounded-full bg-[#eee8f3] text-[#6b5a7a]">
+          <div className="grid size-12 place-items-center rounded-full bg-[#d4f4f9] text-[#0e7490]">
             <Edit className="size-6" />
           </div>
           <div>
-            <h3 className="font-display text-xl font-semibold text-[#25342d]">Adjust goal</h3>
-            <p className="text-sm text-[#7c857c]">Modify the goal based on your program recommendations</p>
+            <h3 className="font-display text-xl font-semibold text-[#0f2a3a]">Adjust goal</h3>
+            <p className="text-sm text-[#64748b]">Modify the goal based on your program recommendations</p>
           </div>
         </div>
 
@@ -110,12 +110,12 @@ export function TrainerGoalReview({ goalRequest, onConfirm, onAdjust, onReject }
     return (
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="grid size-12 place-items-center rounded-full bg-[#f5d5d5] text-[#8b4a4a]">
+          <div className="grid size-12 place-items-center rounded-full bg-[#fde3e6] text-[#f3263a]">
             <X className="size-6" />
           </div>
           <div>
-            <h3 className="font-display text-xl font-semibold text-[#25342d]">Goal rejected</h3>
-            <p className="text-sm text-[#7c857c]">The client will need to submit a new goal</p>
+            <h3 className="font-display text-xl font-semibold text-[#0f2a3a]">Goal rejected</h3>
+            <p className="text-sm text-[#64748b]">The client will need to submit a new goal</p>
           </div>
         </div>
       </div>
@@ -126,52 +126,52 @@ export function TrainerGoalReview({ goalRequest, onConfirm, onAdjust, onReject }
     <div className="card p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="font-display text-xl font-semibold text-[#25342d]">Goal review request</h3>
-          <p className="mt-1 text-sm text-[#929990]">{goalRequest.clientName} wants to start training</p>
+          <h3 className="font-display text-xl font-semibold text-[#0f2a3a]">Goal review request</h3>
+          <p className="mt-1 text-sm text-[#64748b]">{goalRequest.clientName} wants to start training</p>
         </div>
-        <div className="text-right text-xs text-[#969f96]">
+        <div className="text-right text-xs text-[#64748b]">
           Submitted {new Date(goalRequest.submittedAt).toLocaleDateString()}
         </div>
       </div>
 
       <div className="grid gap-4 mb-6">
-        <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
-          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf3d5] text-[#718b33]">
+        <div className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
+          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d6f0e3] text-[#075a38]">
             <User className="size-4" />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-[#969f96]">Client</p>
-            <p className="text-sm font-semibold text-[#3d4b40]">{goalRequest.clientName}</p>
+            <p className="text-xs text-[#64748b]">Client</p>
+            <p className="text-sm font-semibold text-[#1e293b]">{goalRequest.clientName}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
-          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f7eadb] text-[#ad784b]">
+        <div className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
+          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#dff2fc] text-[#1787c4]">
             <Target className="size-4" />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-[#969f96]">Goal</p>
-            <p className="text-sm font-semibold text-[#3d4b40]">{goalRequest.goal}</p>
+            <p className="text-xs text-[#64748b]">Goal</p>
+            <p className="text-sm font-semibold text-[#1e293b]">{goalRequest.goal}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
-          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f7eadb] text-[#ad784b]">
+        <div className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
+          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#dff2fc] text-[#1787c4]">
             <Scale className="size-4" />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-[#969f96]">Weight goal</p>
-            <p className="text-sm font-semibold text-[#3d4b40]">{goalRequest.startingWeight} kg → {goalRequest.targetWeight} kg</p>
+            <p className="text-xs text-[#64748b]">Weight goal</p>
+            <p className="text-sm font-semibold text-[#1e293b]">{goalRequest.startingWeight} kg → {goalRequest.targetWeight} kg</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 rounded-xl border border-[#edf0e8] p-4">
-          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#eee8f3] text-[#6b5a7a]">
+        <div className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
+          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d4f4f9] text-[#0e7490]">
             <Calendar className="size-4" />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-[#969f96]">Timeline</p>
-            <p className="text-sm font-semibold text-[#3d4b40]">{goalRequest.timeline}</p>
+            <p className="text-xs text-[#64748b]">Timeline</p>
+            <p className="text-sm font-semibold text-[#1e293b]">{goalRequest.timeline}</p>
           </div>
         </div>
       </div>
@@ -179,21 +179,21 @@ export function TrainerGoalReview({ goalRequest, onConfirm, onAdjust, onReject }
       <div className="flex gap-3">
         <button
           onClick={handleConfirm}
-          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#edf3d5] px-4 py-3 text-sm font-semibold text-[#718b33] hover:bg-[#d5e5c5] transition"
+          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#d6f0e3] px-4 py-3 text-sm font-semibold text-[#075a38] hover:bg-[#bfe6d2] transition"
         >
           <Check className="size-4" />
           Confirm Goal
         </button>
         <button
           onClick={handleAdjust}
-          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#eee8f3] px-4 py-3 text-sm font-semibold text-[#6b5a7a] hover:bg-[#e0d5e8] transition"
+          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#d4f4f9] px-4 py-3 text-sm font-semibold text-[#0e7490] hover:bg-[#a5e8f3] transition"
         >
           <Edit className="size-4" />
           Adjust Goal
         </button>
         <button
           onClick={handleReject}
-          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#f5d5d5] px-4 py-3 text-sm font-semibold text-[#8b4a4a] hover:bg-[#e5c5c5] transition"
+          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#fde3e6] px-4 py-3 text-sm font-semibold text-[#f3263a] hover:bg-[#fbc8ce] transition"
         >
           <X className="size-4" />
           Reject

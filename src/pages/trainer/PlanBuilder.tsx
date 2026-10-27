@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import {
-  ArrowLeft, Plus, Trash2, GripVertical, Save, Dumbbell, ChevronDown, ChevronUp, Calendar,
-} from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, GripVertical, Save, Dumbbell, ChevronDown, ChevronUp, Calendar, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner, Modal, Badge } from '../../components/ui'
 import { fetchTrainerClients, scheduleSessionsFromPlan, todayISO } from '../../lib/queries'
+import { createNotification } from '../../lib/notifications'
 
 type Day = {
   id?: string
@@ -173,12 +172,13 @@ export function PlanBuilder() {
       let currentPlanId = planId
 
       if (isEdit) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('workout_plans')
           .update({ title, description: description || null })
           .eq('id', planId)
+        if (updateError) throw updateError
       } else {
-        const { data: newPlan } = await supabase
+        const { data: newPlan, error: insertError } = await supabase
           .from('workout_plans')
           .insert({
             trainer_id: profile.id,
@@ -189,13 +189,11 @@ export function PlanBuilder() {
           })
           .select()
           .maybeSingle()
+        if (insertError) throw insertError
         currentPlanId = newPlan?.id
       }
 
-      if (!currentPlanId) {
-        setSaving(false)
-        return
-      }
+      if (!currentPlanId) throw new Error('Plan was not saved')
 
       // Delete existing days and exercises if editing
       if (isEdit) {
@@ -212,7 +210,7 @@ export function PlanBuilder() {
       // Insert days and exercises
       const insertedDayIds: string[] = []
       for (const day of days) {
-        const { data: newDay } = await supabase
+        const { data: newDay, error: dayError } = await supabase
           .from('plan_days')
           .insert({
             plan_id: currentPlanId,
@@ -223,12 +221,13 @@ export function PlanBuilder() {
           .select()
           .maybeSingle()
 
+        if (dayError) throw dayError
         if (!newDay) continue
 
         insertedDayIds.push(newDay.id)
 
         if (day.exercises.length > 0) {
-          await supabase.from('plan_exercises').insert(
+          const { error: exError } = await supabase.from('plan_exercises').insert(
             day.exercises.map((ex) => ({
               plan_day_id: newDay.id,
               name: ex.name,
@@ -240,28 +239,33 @@ export function PlanBuilder() {
               exercise_order: ex.exercise_order,
             })),
           )
+          if (exError) throw exError
         }
       }
 
-      console.log(`Inserted ${insertedDayIds.length} days for plan ${currentPlanId}`)
-
       // Schedule sessions if client is selected (required for client to see workouts)
-      if (selectedClient && currentPlanId && insertedDayIds.length > 0) {
-        // Small delay to ensure database consistency
-        await new Promise(resolve => setTimeout(resolve, 500))
-
+      if (!isEdit && selectedClient && scheduleSessions && insertedDayIds.length > 0) {
         const result = await scheduleSessionsFromPlan(currentPlanId, selectedClient, profile.id, startDate)
-        console.log('Session scheduling result:', result)
         if (!result.success) {
           console.error('Failed to schedule sessions:', result.message)
           alert(`Warning: Sessions could not be scheduled automatically. Error: ${result.message}`)
         }
       }
 
+      if (!isEdit && selectedClient) {
+        await createNotification(
+          selectedClient,
+          'plan_assigned',
+          'New workout plan',
+          `${profile.full_name || 'Your trainer'} assigned you "${title}".`,
+          { plan_id: currentPlanId },
+        )
+      }
+
       navigate('/trainer/plans')
     } catch (err) {
       console.error('Error saving plan:', err)
-      alert('Failed to save workout plan. Please try again.')
+      alert(`Failed to save workout plan: ${(err as { message?: string })?.message || 'Unknown error'}`)
     } finally {
       setSaving(false)
     }
@@ -279,26 +283,26 @@ export function PlanBuilder() {
     <div className="flex flex-col gap-7">
       <button
         onClick={() => navigate('/trainer/plans')}
-        className="flex w-fit items-center gap-2 text-xs font-semibold text-[#7f927d]"
+        className="flex w-fit items-center gap-2 text-xs font-semibold text-[#1787c4]"
       >
         ← Back to plans
       </button>
 
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#93a84e]">Program builder</p>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#25342d]">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-[#1787c4]">Program builder</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-[#0f2a3a]">
             {isEdit ? 'Edit plan' : 'New workout plan'}
           </h1>
-          <p className="mt-2 text-sm text-[#7c857c]">Build a training program with days and exercises.</p>
+          <p className="mt-2 text-sm text-[#64748b]">Build a training program with days and exercises.</p>
         </div>
       </div>
 
       <section className="card p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-xl font-semibold text-[#25342d]">Plan details</h2>
-            <p className="mt-1 text-xs text-[#929990]">Basic information about your program</p>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Plan details</h2>
+            <p className="mt-1 text-xs text-[#64748b]">Basic information about your program</p>
           </div>
         </div>
         <div className="mt-6 space-y-4">
@@ -329,7 +333,7 @@ export function PlanBuilder() {
                 <select
                   value={selectedClient || ''}
                   onChange={(e) => setSelectedClient(e.target.value)}
-                  className="w-full rounded-xl border border-[#e5e7dd] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#c0d568]"
+                  className="w-full rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#68d6e8]"
                 >
                   <option value="">Save as template (assign later)</option>
                   {clients.map((clientLink) => (
@@ -349,7 +353,7 @@ export function PlanBuilder() {
                       onChange={(e) => setScheduleSessions(e.target.checked)}
                       className="w-5 h-5 rounded"
                     />
-                    <label htmlFor="scheduleSessions" className="text-sm text-[#3d4b40] flex items-center gap-2">
+                    <label htmlFor="scheduleSessions" className="text-sm text-[#1e293b] flex items-center gap-2">
                       <Calendar size={16} />
                       Schedule sessions automatically (recommended)
                     </label>
@@ -361,7 +365,7 @@ export function PlanBuilder() {
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full rounded-xl border border-[#e5e7dd] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#c0d568]"
+                        className="w-full rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#68d6e8]"
                       />
                     </div>
                   )}
@@ -375,15 +379,15 @@ export function PlanBuilder() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="font-display text-xl font-semibold text-[#25342d]">Training days</h2>
-            <p className="mt-1 text-xs text-[#929990]">Add exercises to each day</p>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Training days</h2>
+            <p className="mt-1 text-xs text-[#64748b]">Add exercises to each day</p>
           </div>
         </div>
         <div className="space-y-4">
           {days.map((day, dayIndex) => (
             <div key={dayIndex} className="card overflow-hidden">
               {/* Day header */}
-              <div className="flex items-center gap-3 p-4 bg-[#f8f8f4]">
+              <div className="flex items-center gap-3 p-4 bg-[#eef7fc]">
                 <button
                   onClick={() => setExpandedDay(expandedDay === dayIndex ? null : dayIndex)}
                   className="btn-ghost p-1"
@@ -398,7 +402,7 @@ export function PlanBuilder() {
                     updated[dayIndex].title = e.target.value
                     setDays(updated)
                   }}
-                  className="flex-1 bg-transparent font-semibold text-[#25342d] outline-none"
+                  className="flex-1 bg-transparent font-semibold text-[#0f2a3a] outline-none"
                   placeholder="Day title"
                 />
                 <span className="badge badge-lime">{day.exercises.length} exercises</span>
@@ -406,7 +410,7 @@ export function PlanBuilder() {
                   onClick={() => removeDay(dayIndex)}
                   className="btn-ghost p-1.5"
                 >
-                  <Trash2 size={16} className="text-[#8b4a4a]" />
+                  <Trash2 size={16} className="text-[#f3263a]" />
                 </button>
               </div>
 
@@ -414,26 +418,26 @@ export function PlanBuilder() {
               {expandedDay === dayIndex && (
                 <div className="p-4 space-y-3">
                   {day.exercises.map((ex, exIndex) => (
-                    <div key={exIndex} className="border border-[#edf0e8] rounded-xl p-3 space-y-3">
+                    <div key={exIndex} className="border border-[#e3eff6] rounded-xl p-3 space-y-3">
                       <div className="flex items-center gap-2">
-                        <Dumbbell size={16} className="text-[#969f96]" />
+                        <Dumbbell size={16} className="text-[#64748b]" />
                         <input
                           type="text"
                           value={ex.name}
                           onChange={(e) => updateExercise(dayIndex, exIndex, 'name', e.target.value)}
-                          className="flex-1 bg-transparent font-medium text-[#3d4b40] outline-none"
+                          className="flex-1 bg-transparent font-medium text-[#1e293b] outline-none"
                           placeholder="Exercise name"
                         />
                         <button
                           onClick={() => removeExercise(dayIndex, exIndex)}
                           className="btn-ghost p-1"
                         >
-                          <Trash2 size={14} className="text-[#8b4a4a]" />
+                          <Trash2 size={14} className="text-[#f3263a]" />
                         </button>
                       </div>
                       <div className="grid grid-cols-4 gap-2">
                         <div>
-                          <label className="text-xs text-[#969f96]">Sets</label>
+                          <label className="text-xs text-[#64748b]">Sets</label>
                           <input
                             type="number"
                             value={ex.target_sets}
@@ -442,7 +446,7 @@ export function PlanBuilder() {
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-[#969f96]">Reps</label>
+                          <label className="text-xs text-[#64748b]">Reps</label>
                           <input
                             type="number"
                             value={ex.target_reps}
@@ -451,7 +455,7 @@ export function PlanBuilder() {
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-[#969f96]">Weight</label>
+                          <label className="text-xs text-[#64748b]">Weight</label>
                           <input
                             type="number"
                             step="0.5"
@@ -461,7 +465,7 @@ export function PlanBuilder() {
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-[#969f96]">Rest (s)</label>
+                          <label className="text-xs text-[#64748b]">Rest (s)</label>
                           <input
                             type="number"
                             value={ex.rest_seconds}
@@ -475,7 +479,7 @@ export function PlanBuilder() {
 
                   <button
                     onClick={() => setShowExercisePicker(dayIndex)}
-                    className="w-full border-2 border-dashed border-[#e5e7dd] rounded-xl py-3 text-sm text-[#969f96] hover:border-[#c0d568] hover:text-[#718b33] transition-all flex items-center justify-center gap-2"
+                    className="w-full border-2 border-dashed border-[#d9e9f2] rounded-xl py-3 text-sm text-[#64748b] hover:border-[#68d6e8] hover:text-[#075a38] transition-all flex items-center justify-center gap-2"
                   >
                     <Plus size={16} />
                     Add exercise
@@ -487,7 +491,7 @@ export function PlanBuilder() {
 
           <button
             onClick={addDay}
-            className="w-full border-2 border-dashed border-[#e5e7dd] rounded-xl py-4 text-sm text-[#969f96] hover:border-[#c0d568] hover:text-[#718b33] transition-all flex items-center justify-center gap-2"
+            className="w-full border-2 border-dashed border-[#d9e9f2] rounded-xl py-4 text-sm text-[#64748b] hover:border-[#68d6e8] hover:text-[#075a38] transition-all flex items-center justify-center gap-2"
           >
             <Plus size={18} />
             Add day
@@ -509,21 +513,26 @@ export function PlanBuilder() {
       {showExercisePicker !== null && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
           <div className="card p-6 max-w-lg w-full">
-            <h2 className="font-display text-xl font-semibold text-[#25342d] mb-6">Add exercise</h2>
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Add exercise</h2>
+              <button onClick={() => setShowExercisePicker(null)} aria-label="Close" className="btn-ghost p-1.5">
+                <X size={18} />
+              </button>
+            </div>
             <div className="space-y-3">
-              <p className="text-sm text-[#969f96]">Pick from common exercises or type your own:</p>
+              <p className="text-sm text-[#64748b]">Pick from common exercises or type your own:</p>
               <div className="flex flex-wrap gap-2">
                 {EXERCISE_SUGGESTIONS.map((name) => (
                   <button
                     key={name}
                     onClick={() => showExercisePicker !== null && addExercise(showExercisePicker, name)}
-                    className="badge bg-[#f8f8f4] text-[#3d4b40] hover:bg-[#edf3d5] hover:text-[#718b33] transition-all cursor-pointer"
+                    className="badge bg-[#eef7fc] text-[#1e293b] hover:bg-[#d6f0e3] hover:text-[#075a38] transition-all cursor-pointer"
                   >
                     {name}
                   </button>
                 ))}
               </div>
-              <div className="border-t border-[#eceee5] pt-3">
+              <div className="border-t border-[#dceaf2] pt-3">
                 <label className="label">Custom exercise</label>
                 <div className="flex gap-2">
                   <input
