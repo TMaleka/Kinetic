@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar'
 import Topbar from '../components/Topbar'
 import MobileNav from '../components/MobileNav'
 
-type Screen = 'dashboard' | 'clients' | 'client-detail' | 'plans' | 'builder' | 'progress' | 'workouts' | 'profile' | 'session'
+type Screen = 'dashboard' | 'goals' | 'clients' | 'client-detail' | 'plans' | 'builder' | 'progress' | 'workouts' | 'profile' | 'session'
 
 export function TrainerLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate()

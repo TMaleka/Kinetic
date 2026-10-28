@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -8,6 +8,9 @@ import {
   buildGoalSummary, type IntakeDetails, type PrimaryGoal,
 } from '../../lib/intake'
 import { ClientIntakeSummary } from '../../components/ClientIntakeSummary'
+import { fetchGoalHistory } from '../../lib/activeGoal'
+import { intakeFromGoalRow } from '../../lib/intake'
+import { createNotification } from '../../lib/notifications'
 
 const STEPS = ['goal', 'targets', 'baseline', 'health', 'schedule', 'review'] as const
 type Step = (typeof STEPS)[number]
@@ -54,13 +57,24 @@ function YesNo({ value, onChange }: { value: string; onChange: (v: 'yes' | 'no')
   return <Chips single options={['Yes', 'No']} value={value ? [value === 'yes' ? 'Yes' : 'No'] : []} onChange={(v) => onChange(v[0] === 'Yes' ? 'yes' : 'no')} />
 }
 
-export function ClientOnboarding() {
+export function ClientOnboarding({ mode = 'onboarding' }: { mode?: 'onboarding' | 'edit' }) {
+  const editing = mode === 'edit'
   const { profile, refreshProfile } = useAuth()
   const navigate = useNavigate()
   const [step, setStep] = useState<Step>('goal')
   const [d, setD] = useState<IntakeDetails>(EMPTY_INTAKE)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  useEffect(() => {
+    if (!editing || !profile) return
+    fetchGoalHistory(profile.id)
+      .then(async ({ active }) => {
+        const prev = active ? intakeFromGoalRow(active) : null
+        const { data: m } = await supabase.from('measurements').select('body_weight').eq('client_id', profile.id).not('body_weight', 'is', null).order('logged_at', { ascending: false }).order('created_at', { ascending: false }).limit(1)
+        setD((cur) => ({ ...cur, ...(prev || {}), weightKg: m?.[0]?.body_weight != null ? String(m[0].body_weight) : prev?.weightKg || cur.weightKg }))
+      })
+      .catch((err) => console.error('Failed to load current goal:', err))
+  }, [editing, profile])
   const set = <K extends keyof IntakeDetails>(key: K, value: IntakeDetails[K]) => setD((prev) => ({ ...prev, [key]: value }))
   const text = (key: keyof IntakeDetails, placeholder = '', type = 'text') => (
     <input type={type} value={d[key] as string} onChange={(e) => set(key, e.target.value as never)} placeholder={placeholder} className="input" />
@@ -123,6 +137,13 @@ export function ClientOnboarding() {
         ;({ error: goalError } = await supabase.from('client_goals').insert({ ...base, additional_targets: `INTAKE_JSON:${JSON.stringify(details)}` }))
       }
       if (goalError) throw goalError
+
+      if (editing) {
+        const { data: links } = await supabase.from('trainer_client_links').select('trainer_id').eq('client_id', profile.id).eq('status', 'active')
+        await Promise.all((links || []).map((l) => createNotification(l.trainer_id, 'goal_updated', 'Goal update to review', `${profile.full_name || 'Your client'} updated their goal: ${base.goal}`, { client_id: profile.id })))
+        navigate('/app/goals')
+        return
+      }
 
       if (d.weightKg) {
         const { error: mError } = await supabase.from('measurements').insert({ client_id: profile.id, body_weight: parseFloat(d.weightKg) })
@@ -336,7 +357,7 @@ export function ClientOnboarding() {
             disabled={loading || !valid[step]}
             className="btn-primary flex-1 py-3 disabled:opacity-50"
           >
-            {loading ? 'Saving…' : step === 'review' ? 'Send to my trainer' : 'Next'}
+            {loading ? 'Saving…' : step === 'review' ? (editing ? 'Send update to my trainer' : 'Send to my trainer') : 'Next'}
             {step !== 'review' && <ChevronRight className="size-4" />}
           </button>
         </div>

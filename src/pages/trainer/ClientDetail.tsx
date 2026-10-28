@@ -8,6 +8,7 @@ import { formatDate, formatRelative, fetchClientActivity, addActivityEvent, sche
 import { createNotification } from '../../lib/notifications'
 import { WeeklyActivityChart } from '../../components/WeeklyActivityChart'
 import { ClientIntakeSummary } from '../../components/ClientIntakeSummary'
+import { GoalTracker } from '../../components/GoalTracker'
 import { intakeFromGoalRow } from '../../lib/intake'
 
 function StatCard({ label, value, detail, icon: Icon, accent = 'lime' }: { label: string; value: string; detail: string; icon: any; accent?: 'lime' | 'lavender' | 'peach' }) {
@@ -333,6 +334,8 @@ export function ClientDetail() {
           </div>
         </section>
       </div>
+
+      {clientId && <GoalTracker clientId={clientId} />}
 
       {intake && (
         <section className="card p-6">

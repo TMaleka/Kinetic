@@ -13,7 +13,7 @@ import {
 import { Modal } from './ui';
 
 type Role = 'trainer' | 'client';
-type Screen = 'dashboard' | 'clients' | 'client-detail' | 'plans' | 'builder' | 'progress' | 'workouts' | 'profile' | 'session';
+type Screen = 'dashboard' | 'goals' | 'clients' | 'client-detail' | 'plans' | 'builder' | 'progress' | 'workouts' | 'profile' | 'session';
 
 interface TopbarProps {
   role: Role;
