@@ -1,7 +1,7 @@
-import { LayoutDashboard, Users, Dumbbell, TrendingUp, UserRound, Settings } from 'lucide-react'
+import { Target, LayoutDashboard, Users, Dumbbell, TrendingUp, UserRound, Settings } from 'lucide-react'
 
 type Role = 'trainer' | 'client'
-type Screen = 'dashboard' | 'clients' | 'client-detail' | 'plans' | 'builder' | 'progress' | 'workouts' | 'profile' | 'session'
+type Screen = 'dashboard' | 'goals' | 'clients' | 'client-detail' | 'plans' | 'builder' | 'progress' | 'workouts' | 'profile' | 'session'
 
 interface MobileNavProps {
   role: Role
@@ -19,6 +19,7 @@ const trainerNav = [
 const clientNav = [
   { id: 'dashboard' as Screen, label: 'Today', icon: LayoutDashboard },
   { id: 'workouts' as Screen, label: 'Workouts', icon: Dumbbell },
+  { id: 'goals' as Screen, label: 'Goals', icon: Target },
   { id: 'progress' as Screen, label: 'Progress', icon: TrendingUp },
   { id: 'profile' as Screen, label: 'Profile', icon: UserRound },
 ]

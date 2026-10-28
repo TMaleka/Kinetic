@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, Users, Dumbbell, TrendingUp, UserRound, Settings } from 'lucide-react';
+import { Target, LayoutDashboard, Users, Dumbbell, TrendingUp, UserRound, Settings } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getInitials } from '../lib/queries';
 
 type Role = 'trainer' | 'client';
-type Screen = 'dashboard' | 'clients' | 'client-detail' | 'plans' | 'builder' | 'progress' | 'workouts' | 'profile' | 'session';
+type Screen = 'dashboard' | 'goals' | 'clients' | 'client-detail' | 'plans' | 'builder' | 'progress' | 'workouts' | 'profile' | 'session';
 
 interface SidebarProps {
   role: Role;
@@ -23,6 +23,7 @@ const nav = [
 
 const clientNav = [
   { id: 'dashboard' as Screen, label: 'Today', icon: LayoutDashboard },
+  { id: 'goals' as Screen, label: 'My goals', icon: Target },
   { id: 'progress' as Screen, label: 'My progress', icon: TrendingUp },
   { id: 'workouts' as Screen, label: 'Workouts', icon: Dumbbell },
   { id: 'profile' as Screen, label: 'Profile', icon: UserRound },

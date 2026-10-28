@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 export type Notification = {
   id: string
   user_id: string
-  type: 'workout_reminder' | 'workout_completed' | 'workout_missed' | 'measurement_logged' | 'photo_uploaded' | 'client_linked' | 'plan_assigned'
+  type: 'workout_reminder' | 'workout_completed' | 'workout_missed' | 'measurement_logged' | 'photo_uploaded' | 'client_linked' | 'plan_assigned' | 'goal_updated'
   title: string
   message: string
   metadata: Record<string, unknown> | null

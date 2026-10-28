@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar'
 import Topbar from '../components/Topbar'
 import MobileNav from '../components/MobileNav'
 
-type Screen = 'dashboard' | 'workouts' | 'session' | 'progress' | 'profile' | 'clients' | 'client-detail' | 'plans' | 'builder'
+type Screen = 'dashboard' | 'goals' | 'workouts' | 'session' | 'progress' | 'profile' | 'clients' | 'client-detail' | 'plans' | 'builder'
 
 export function ClientLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
@@ -16,6 +16,7 @@ export function ClientLayout({ children }: { children: ReactNode }) {
     if (path === '/app') return 'dashboard'
     if (path === '/app/workouts') return 'workouts'
     if (path.startsWith('/app/workouts/')) return 'session'
+    if (path.startsWith('/app/goals')) return 'goals'
     if (path === '/app/progress') return 'progress'
     if (path === '/app/profile') return 'profile'
     if (path === '/onboarding') return 'dashboard'
@@ -31,6 +32,9 @@ export function ClientLayout({ children }: { children: ReactNode }) {
         break
       case 'workouts':
         navigate('/app/workouts')
+        break
+      case 'goals':
+        navigate('/app/goals')
         break
       case 'progress':
         navigate('/app/progress')

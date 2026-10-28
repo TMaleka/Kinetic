@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { GoalTracker } from '../../components/GoalTracker'
 import { Plus, Camera, X, ChevronRight, Target, TrendingUp } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -236,6 +237,8 @@ export function ClientProgress() {
           <Plus className="size-4" />Log measurement
         </button>
       </div>
+
+      {profile && <GoalTracker clientId={profile.id} refreshKey={measurements.length} />}
 
       <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
         <section className="card p-6">

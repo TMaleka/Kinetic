@@ -15,6 +15,7 @@ import { ClientWorkouts } from './pages/client/ClientWorkouts'
 import { WorkoutSession } from './pages/client/WorkoutSession'
 import { ClientProgress } from './pages/client/ClientProgress'
 import { ClientProfile } from './pages/client/ClientProfile'
+import { ClientGoals } from './pages/client/ClientGoals'
 import { ClientOnboarding } from './pages/onboarding/ClientOnboarding'
 
 function ProtectedRoutes() {
@@ -54,6 +55,8 @@ function ProtectedRoutes() {
         <Route path="/app" element={showOnboarding ? <Navigate to="/onboarding" replace /> : <ClientDashboard />} />
         <Route path="/app/workouts" element={showOnboarding ? <Navigate to="/onboarding" replace /> : <ClientWorkouts />} />
         <Route path="/app/workouts/:sessionId" element={showOnboarding ? <Navigate to="/onboarding" replace /> : <WorkoutSession />} />
+        <Route path="/app/goals" element={showOnboarding ? <Navigate to="/onboarding" replace /> : <ClientGoals />} />
+        <Route path="/app/goals/edit" element={showOnboarding ? <Navigate to="/onboarding" replace /> : <ClientOnboarding mode="edit" />} />
         <Route path="/app/progress" element={showOnboarding ? <Navigate to="/onboarding" replace /> : <ClientProgress />} />
         <Route path="/app/profile" element={showOnboarding ? <Navigate to="/onboarding" replace /> : <ClientProfile />} />
         <Route path="*" element={<Navigate to={showOnboarding ? "/onboarding" : "/app"} replace />} />
