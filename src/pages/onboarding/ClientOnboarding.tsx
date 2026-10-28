@@ -253,7 +253,7 @@ export function ClientOnboarding({ mode = 'onboarding' }: { mode?: 'onboarding' 
                     ...prev,
                     primaryGoal: g.id,
                     secondaryGoals: prev.secondaryGoals.filter((s) => s !== g.id),
-                    ...(weightBaseline ? { weightKg: g.id === weightBaseline.primary ? weightBaseline.previous : weightBaseline.latest } : {}),
+                    ...(weightBaseline && [weightBaseline.previous, weightBaseline.latest].includes(prev.weightKg) ? { weightKg: g.id === weightBaseline.primary ? weightBaseline.previous : weightBaseline.latest } : {}),
                   }))}
                   className={`rounded-xl border p-3 text-left transition ${d.primaryGoal === g.id ? 'border-[#28a9e8] bg-[#e0f3fc]' : 'border-[#d9e9f2] hover:border-[#28a9e8]'}`}
                 >
