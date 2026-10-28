@@ -26,7 +26,7 @@ CREATE POLICY "goal_metrics_select" ON public.goal_metrics
   FOR SELECT TO authenticated
   USING (
     client_id = auth.uid()
-    OR EXISTS (SELECT 1 FROM public.trainer_client_links tcl WHERE tcl.client_id = goal_metrics.client_id AND tcl.trainer_id = auth.uid())
+    OR EXISTS (SELECT 1 FROM public.trainer_client_links tcl WHERE tcl.client_id = goal_metrics.client_id AND tcl.trainer_id = auth.uid() AND tcl.status = 'active')
   );
 
 DROP POLICY IF EXISTS "goal_metrics_insert" ON public.goal_metrics;
@@ -34,7 +34,7 @@ CREATE POLICY "goal_metrics_insert" ON public.goal_metrics
   FOR INSERT TO authenticated
   WITH CHECK (
     client_id = auth.uid()
-    OR EXISTS (SELECT 1 FROM public.trainer_client_links tcl WHERE tcl.client_id = goal_metrics.client_id AND tcl.trainer_id = auth.uid())
+    OR EXISTS (SELECT 1 FROM public.trainer_client_links tcl WHERE tcl.client_id = goal_metrics.client_id AND tcl.trainer_id = auth.uid() AND tcl.status = 'active')
   );
 
 DROP POLICY IF EXISTS "goal_metrics_delete" ON public.goal_metrics;
@@ -42,7 +42,7 @@ CREATE POLICY "goal_metrics_delete" ON public.goal_metrics
   FOR DELETE TO authenticated
   USING (
     client_id = auth.uid()
-    OR EXISTS (SELECT 1 FROM public.trainer_client_links tcl WHERE tcl.client_id = goal_metrics.client_id AND tcl.trainer_id = auth.uid())
+    OR EXISTS (SELECT 1 FROM public.trainer_client_links tcl WHERE tcl.client_id = goal_metrics.client_id AND tcl.trainer_id = auth.uid() AND tcl.status = 'active')
   );
 
 -- Allow "goal_updated" notifications when a client changes their goal.

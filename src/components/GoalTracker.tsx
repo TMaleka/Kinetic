@@ -36,7 +36,7 @@ export function GoalTracker({ clientId, canLog = true, refreshKey = 0 }: { clien
   const load = async () => {
     setLoading(true)
     try {
-      const { active } = await fetchGoalHistory(clientId)
+      const { active, since } = await fetchGoalHistory(clientId)
       const metricDefs = metricsForGoal(active ? intakeFromGoalRow(active) : null, active || undefined)
       setDefs(metricDefs)
       setGoalText(active?.goal || '')
@@ -47,7 +47,7 @@ export function GoalTracker({ clientId, canLog = true, refreshKey = 0 }: { clien
       if (gmError) console.error('goal_metrics unavailable:', gmError)
       const byKey: Record<string, Point[]> = {}
       const push = (k: string, date: string, v: unknown) => {
-        if (v === null || v === undefined) return
+        if (v === null || v === undefined || (since && date < since)) return
         ;(byKey[k] ||= []).push({ date, value: Number(v) })
       }
       for (const m of ms || []) {

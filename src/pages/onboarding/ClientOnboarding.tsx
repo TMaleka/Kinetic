@@ -71,7 +71,7 @@ export function ClientOnboarding({ mode = 'onboarding' }: { mode?: 'onboarding' 
       .then(async ({ active }) => {
         const prev = active ? intakeFromGoalRow(active) : null
         const { data: m } = await supabase.from('measurements').select('body_weight').eq('client_id', profile.id).not('body_weight', 'is', null).order('logged_at', { ascending: false }).order('created_at', { ascending: false }).limit(1)
-        setD((cur) => ({ ...cur, ...(prev || {}), weightKg: m?.[0]?.body_weight != null ? String(m[0].body_weight) : prev?.weightKg || cur.weightKg }))
+        setD((cur) => ({ ...cur, ...(prev || {}), weightKg: prev?.weightKg || (m?.[0]?.body_weight != null ? String(m[0].body_weight) : cur.weightKg) }))
       })
       .catch((err) => console.error('Failed to load current goal:', err))
   }, [editing, profile])
