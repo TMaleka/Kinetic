@@ -65,13 +65,17 @@ export function ClientOnboarding({ mode = 'onboarding' }: { mode?: 'onboarding' 
   const [d, setD] = useState<IntakeDetails>(EMPTY_INTAKE)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  // Edit mode: keep the old starting weight while continuing the same goal; a new goal starts from the latest weight.
+  const [weightBaseline, setWeightBaseline] = useState<{ primary: string; previous: string; latest: string } | null>(null)
   useEffect(() => {
     if (!editing || !profile) return
     fetchGoalHistory(profile.id)
       .then(async ({ active }) => {
         const prev = active ? intakeFromGoalRow(active) : null
         const { data: m } = await supabase.from('measurements').select('body_weight').eq('client_id', profile.id).not('body_weight', 'is', null).order('logged_at', { ascending: false }).order('created_at', { ascending: false }).limit(1)
-        setD((cur) => ({ ...cur, ...(prev || {}), weightKg: prev?.weightKg || (m?.[0]?.body_weight != null ? String(m[0].body_weight) : cur.weightKg) }))
+        const latest = m?.[0]?.body_weight != null ? String(m[0].body_weight) : ''
+        setWeightBaseline({ primary: prev?.primaryGoal || '', previous: prev?.weightKg || latest, latest: latest || prev?.weightKg || '' })
+        setD((cur) => ({ ...cur, ...(prev || {}), weightKg: prev?.weightKg || latest || cur.weightKg }))
       })
       .catch((err) => console.error('Failed to load current goal:', err))
   }, [editing, profile])
@@ -245,7 +249,12 @@ export function ClientOnboarding({ mode = 'onboarding' }: { mode?: 'onboarding' 
                 <button
                   key={g.id}
                   type="button"
-                  onClick={() => setD((prev) => ({ ...prev, primaryGoal: g.id, secondaryGoals: prev.secondaryGoals.filter((s) => s !== g.id) }))}
+                  onClick={() => setD((prev) => ({
+                    ...prev,
+                    primaryGoal: g.id,
+                    secondaryGoals: prev.secondaryGoals.filter((s) => s !== g.id),
+                    ...(weightBaseline ? { weightKg: g.id === weightBaseline.primary ? weightBaseline.previous : weightBaseline.latest } : {}),
+                  }))}
                   className={`rounded-xl border p-3 text-left transition ${d.primaryGoal === g.id ? 'border-[#28a9e8] bg-[#e0f3fc]' : 'border-[#d9e9f2] hover:border-[#28a9e8]'}`}
                 >
                   <p className="text-sm font-semibold text-[#0f2a3a]">{g.label}</p>
