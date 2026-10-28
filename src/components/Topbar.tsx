@@ -64,17 +64,28 @@ export default function Topbar({ role, setScreen }: TopbarProps) {
   useEffect(() => {
     if (!profile) return
     let active = true
-    fetchNotifications(profile.id)
-      .then((data) => active && setNotifications(data || []))
-      .catch((err) => console.error('Failed to load notifications:', err))
+    const load = () =>
+      fetchNotifications(profile.id)
+        .then((data) => active && setNotifications(data || []))
+        .catch((err) => console.error('Failed to load notifications:', err))
+    load()
+    const poll = window.setInterval(load, 60000)
     const channelPromise = subscribeToNotifications(profile.id, (n) => {
       setNotifications((prev) => [n, ...prev])
     })
     return () => {
       active = false
+      window.clearInterval(poll)
       channelPromise.then((channel) => channel.unsubscribe())
     }
   }, [profile])
+
+  useEffect(() => {
+    if (!profile || !showNotifications) return
+    fetchNotifications(profile.id)
+      .then((data) => setNotifications(data || []))
+      .catch((err) => console.error('Failed to load notifications:', err))
+  }, [profile, showNotifications])
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
