@@ -134,3 +134,28 @@ export function intakeFromGoalRow(row: { details?: unknown; additional_targets?:
   }
   return null
 }
+
+const GOAL_FIELDS: Record<PrimaryGoal, (keyof IntakeDetails)[]> = {
+  lose_fat: ['targetWeight', 'targetBodyFat', 'currentWaist', 'targetWaist'],
+  build_muscle: ['muscleAreas', 'targetWeight'],
+  get_stronger: ['lifts'],
+  endurance: ['enduranceActivity', 'enduranceDistance', 'currentTime', 'targetTime'],
+  event: ['eventName', 'eventDate'],
+  mobility: ['mobilityAreas'],
+  rehab: ['rehabInjury', 'rehabCleared'],
+  sport: ['sportName', 'sportFocus'],
+  health: ['healthTarget'],
+}
+
+// Clears targets that belong to other goals (e.g. after switching goal in the edit flow);
+// for events the deadline is always the event date.
+export function pruneIntake(d: IntakeDetails): IntakeDetails {
+  if (!d.primaryGoal) return d
+  const keep = new Set(GOAL_FIELDS[d.primaryGoal])
+  const out = { ...d }
+  for (const key of new Set(Object.values(GOAL_FIELDS).flat())) {
+    if (!keep.has(key)) (out as any)[key] = EMPTY_INTAKE[key]
+  }
+  if (d.primaryGoal === 'event') out.targetDate = d.eventDate
+  return out
+}

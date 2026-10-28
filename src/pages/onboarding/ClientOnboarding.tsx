@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import {
   BODY_AREAS, EMPTY_INTAKE, EQUIPMENT, LIFTS, MUSCLE_AREAS, PRIMARY_GOALS, WEEKDAYS,
-  buildGoalSummary, type IntakeDetails, type PrimaryGoal,
+  buildGoalSummary, pruneIntake, type IntakeDetails, type PrimaryGoal,
 } from '../../lib/intake'
 import { ClientIntakeSummary } from '../../components/ClientIntakeSummary'
 import { fetchGoalHistory } from '../../lib/activeGoal'
@@ -121,12 +121,12 @@ export function ClientOnboarding({ mode = 'onboarding' }: { mode?: 'onboarding' 
     if (!profile) return
     setLoading(true)
     setError('')
-    const details = { ...d, targetDate: d.primaryGoal === 'event' && !d.targetDate ? d.eventDate : d.targetDate }
+    const details = pruneIntake(d)
     const base = {
       client_id: profile.id,
       goal: buildGoalSummary(details),
       starting_weight: d.weightKg ? parseFloat(d.weightKg) : null,
-      target_weight: d.targetWeight ? parseFloat(d.targetWeight) : null,
+      target_weight: details.targetWeight ? parseFloat(details.targetWeight) : null,
       timeline: details.targetDate || null,
       starting_height: d.heightCm ? parseFloat(d.heightCm) : null,
       activity_level: d.activityLevel || null,
@@ -332,9 +332,9 @@ export function ClientOnboarding({ mode = 'onboarding' }: { mode?: 'onboarding' 
           <>
             <div className="rounded-xl bg-[#e0f3fc] p-4">
               <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#1787c4]">Your goal</p>
-              <p className="mt-1 text-sm font-semibold text-[#0f2a3a]">{buildGoalSummary(d)}</p>
+              <p className="mt-1 text-sm font-semibold text-[#0f2a3a]">{buildGoalSummary(pruneIntake(d))}</p>
             </div>
-            <ClientIntakeSummary details={d} />
+            <ClientIntakeSummary details={pruneIntake(d)} />
           </>
         )
     }
