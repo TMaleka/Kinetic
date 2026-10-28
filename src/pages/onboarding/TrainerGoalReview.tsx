@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Check, X, Edit, User, Target, Scale, Calendar } from 'lucide-react'
+import { ClientIntakeSummary } from '../../components/ClientIntakeSummary'
+import type { IntakeDetails } from '../../lib/intake'
 
 interface ClientGoalRequest {
   clientId: string
@@ -9,6 +11,7 @@ interface ClientGoalRequest {
   targetWeight: string
   timeline: string
   submittedAt: string
+  details?: Partial<IntakeDetails> | null
 }
 
 interface TrainerGoalReviewProps {
@@ -134,6 +137,15 @@ export function TrainerGoalReview({ goalRequest, onConfirm, onAdjust, onReject }
         </div>
       </div>
 
+      {goalRequest.details ? (
+        <div className="mb-6 space-y-3">
+          <div className="rounded-xl bg-[#e0f3fc] p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#1787c4]">Goal</p>
+            <p className="mt-1 text-sm font-semibold text-[#0f2a3a]">{goalRequest.goal}</p>
+          </div>
+          <ClientIntakeSummary details={goalRequest.details} />
+        </div>
+      ) : (
       <div className="grid gap-4 mb-6">
         <div className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4">
           <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d6f0e3] text-[#075a38]">
@@ -175,6 +187,8 @@ export function TrainerGoalReview({ goalRequest, onConfirm, onAdjust, onReject }
           </div>
         </div>
       </div>
+
+      )}
 
       <div className="flex gap-3">
         <button

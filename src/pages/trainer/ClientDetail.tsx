@@ -7,6 +7,8 @@ import { Spinner } from '../../components/ui'
 import { formatDate, formatRelative, fetchClientActivity, addActivityEvent, scheduleSessionsFromPlan, todayISO, effectiveStatus, adherencePercent, computeStreak, withSignedPhotoUrls } from '../../lib/queries'
 import { createNotification } from '../../lib/notifications'
 import { WeeklyActivityChart } from '../../components/WeeklyActivityChart'
+import { ClientIntakeSummary } from '../../components/ClientIntakeSummary'
+import { intakeFromGoalRow } from '../../lib/intake'
 
 function StatCard({ label, value, detail, icon: Icon, accent = 'lime' }: { label: string; value: string; detail: string; icon: any; accent?: 'lime' | 'lavender' | 'peach' }) {
   const bg = accent === 'lime' ? 'bg-[#d6f0e3]' : accent === 'lavender' ? 'bg-[#d4f4f9]' : 'bg-[#dff2fc]'
@@ -36,6 +38,7 @@ export function ClientDetail() {
   const [photos, setPhotos] = useState<any[]>([])
   const [activity, setActivity] = useState<any[]>([])
   const [plans, setPlans] = useState<any[]>([])
+  const [intake, setIntake] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showAddMeasurement, setShowAddMeasurement] = useState(false)
   const [showAssignPlan, setShowAssignPlan] = useState(false)
@@ -92,6 +95,15 @@ export function ClientDetail() {
         .select('*')
         .eq('client_id', clientId)
         .order('created_at', { ascending: false })
+
+      const { data: goalRows } = await supabase
+        .from('client_goals')
+        .select('*')
+        .eq('client_id', clientId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+      const latestGoal = goalRows?.[0]
+      setIntake(latestGoal ? { goal: latestGoal.goal, status: latestGoal.status, details: intakeFromGoalRow(latestGoal) } : null)
 
       const activityData = await fetchClientActivity(clientId, 20)
 
@@ -321,6 +333,25 @@ export function ClientDetail() {
           </div>
         </section>
       </div>
+
+      {intake && (
+        <section className="card p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Client intake</h2>
+              <p className="mt-1 text-xs text-[#64748b]">{intake.goal}</p>
+            </div>
+            <span className="badge bg-[#e0f3fc] text-[#1787c4]">Goal {intake.status}</span>
+          </div>
+          <div className="mt-6">
+            {intake.details ? (
+              <ClientIntakeSummary details={intake.details} />
+            ) : (
+              <p className="text-sm text-[#64748b]">This client onboarded before the detailed intake was added.</p>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="card p-6">
         <div className="flex items-center justify-between">
