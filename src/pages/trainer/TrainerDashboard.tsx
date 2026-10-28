@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
 import { formatRelative, todayISO, addDays, toLocalISO, adherencePercent } from '../../lib/queries'
 import { TrainerGoalReview } from '../onboarding/TrainerGoalReview'
+import { intakeFromGoalRow } from '../../lib/intake'
 
 type AttentionItem = {
   clientId: string
@@ -439,6 +440,7 @@ export function TrainerDashboard() {
                     targetWeight: goalRequest.target_weight ?? '—',
                     timeline: goalRequest.timeline || 'Not specified',
                     submittedAt: goalRequest.created_at,
+                    details: intakeFromGoalRow(goalRequest),
                   }}
                   onConfirm={(feedback) => reviewGoal(goalRequest, 'confirm', undefined, feedback)}
                   onAdjust={(adjustedGoal, feedback) => reviewGoal(goalRequest, 'adjust', adjustedGoal, feedback)}
