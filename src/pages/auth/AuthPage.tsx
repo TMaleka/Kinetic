@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
 import { ConsentCheckbox } from '../../components/ConsentGate'
 import { consentMetadata } from '../../lib/privacy'
+import { useAuth } from '../../context/AuthContext'
 
 export function AuthPage() {
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signup')
@@ -18,6 +19,7 @@ export function AuthPage() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const navigate = useNavigate()
+  const { refreshProfile } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,6 +60,8 @@ export function AuthPage() {
             .from('profiles')
             .update({ role, full_name: fullName })
             .eq('id', data.user.id)
+          // The auth listener may have loaded the profile before the role update landed.
+          await refreshProfile()
         }
         // Navigate to appropriate dashboard based on role
         navigate(role === 'trainer' ? '/trainer' : '/onboarding')
