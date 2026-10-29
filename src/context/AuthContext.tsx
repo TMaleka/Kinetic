@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { supabase, type Profile } from '../lib/supabase'
 import { fetchProfile } from '../lib/queries'
 
@@ -22,6 +22,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthContextValue['session']>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const profileUserId = useRef<string | null>(null)
+  // Increments on every profile fetch so a slower, older fetch can't overwrite a newer profile.
+  const profileReq = useRef(0)
 
   useEffect(() => {
     let mounted = true
@@ -30,8 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return
       setSession(session)
       if (session) {
+        const req = ++profileReq.current
         fetchProfile(session.user.id).then((p) => {
-          if (mounted) {
+          if (mounted && req === profileReq.current) {
+            profileUserId.current = p ? session.user.id : null
             setProfile(p)
             setLoading(false)
           }
@@ -45,15 +50,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ;(async () => {
         if (event === 'SIGNED_OUT') {
           if (mounted) {
+            profileUserId.current = null
             setSession(null)
             setProfile(null)
           }
           return
         }
         if (session) {
-          if (mounted) setSession(session)
+          if (!mounted) return
+          setSession(session)
+          // A different user just signed in: hold routes on the loader until their profile arrives,
+          // otherwise protected routes see session-without-profile and bounce back to /auth.
+          if (profileUserId.current !== session.user.id) setLoading(true)
+          const req = ++profileReq.current
           const p = await fetchProfile(session.user.id)
-          if (mounted) setProfile(p)
+          if (!mounted) return
+          if (req !== profileReq.current) {
+            setLoading(false)
+            return
+          }
+          profileUserId.current = p ? session.user.id : null
+          setProfile(p)
         }
         if (mounted) setLoading(false)
       })()
@@ -67,14 +84,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    profileUserId.current = null
     setProfile(null)
     setSession(null)
   }
 
   const refreshProfile = async () => {
-    if (!session) return
-    const p = await fetchProfile(session.user.id)
+    const { data } = await supabase.auth.getSession()
+    const current = data.session
+    if (!current) return
+    const req = ++profileReq.current
+    const p = await fetchProfile(current.user.id)
+    if (req !== profileReq.current) return
+    profileUserId.current = p ? current.user.id : null
     setProfile(p)
+    setLoading(false)
   }
 
   return (
