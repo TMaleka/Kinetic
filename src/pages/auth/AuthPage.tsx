@@ -30,7 +30,9 @@ export function AuthPage() {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
         })
-        if (error) throw error
+        // Only surface rate limiting; other errors would reveal whether the account exists.
+        if (error?.status === 429) throw error
+        if (error) console.error('Password reset request failed:', error)
         setNotice('If an account exists for that email, a password reset link is on its way. Check your inbox (and spam folder).')
         return
       }
