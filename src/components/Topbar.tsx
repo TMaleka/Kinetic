@@ -11,6 +11,7 @@ import {
   type Notification,
 } from '../lib/notifications';
 import { Modal } from './ui';
+import { FeedbackButton } from './FeedbackButton';
 
 type Role = 'trainer' | 'client';
 type Screen = 'dashboard' | 'goals' | 'clients' | 'client-detail' | 'plans' | 'builder' | 'progress' | 'workouts' | 'profile' | 'session';
@@ -129,6 +130,7 @@ export default function Topbar({ role, setScreen }: TopbarProps) {
         </div>
       </div>
       <div className="flex items-center gap-3">
+        <FeedbackButton />
         <button
           onClick={() => setShowHelp(true)}
           aria-label="Help"

@@ -1,6 +1,11 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { AuthPage } from './pages/auth/AuthPage'
+import { ResetPasswordPage, RecoveryRedirect } from './pages/auth/ResetPasswordPage'
+import { PrivacyPage } from './pages/legal/PrivacyPage'
+import { ConsentGate } from './components/ConsentGate'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { hasConsented } from './lib/privacy'
 import { TrainerLayout } from './layouts/TrainerLayout'
 import { ClientLayout } from './layouts/ClientLayout'
 import { LoadingPage } from './components/ui'
@@ -19,10 +24,11 @@ import { ClientGoals } from './pages/client/ClientGoals'
 import { ClientOnboarding } from './pages/onboarding/ClientOnboarding'
 
 function ProtectedRoutes() {
-  const { profile, loading } = useAuth()
+  const { session, profile, loading } = useAuth()
 
   if (loading) return <LoadingPage />
   if (!profile) return <Navigate to="/auth" replace />
+  if (!hasConsented(session)) return <ConsentGate />
 
   if (profile.role === 'trainer') {
     return (
@@ -66,12 +72,18 @@ function ProtectedRoutes() {
 }
 
 export default function App() {
+  const location = useLocation()
   return (
-    <AuthProvider>
-      <Routes>
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/*" element={<ProtectedRoutes />} />
-      </Routes>
-    </AuthProvider>
+    <ErrorBoundary resetKey={location.pathname}>
+      <AuthProvider>
+        <RecoveryRedirect />
+        <Routes>
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/*" element={<ProtectedRoutes />} />
+        </Routes>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
