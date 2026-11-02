@@ -143,7 +143,7 @@ export function TrainerGoalReview({ goalRequest, onConfirm, onAdjust, onReject }
             <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#1787c4]">Goal</p>
             <p className="mt-1 text-sm font-semibold text-[#0f2a3a]">{goalRequest.goal}</p>
           </div>
-          <ClientIntakeSummary details={goalRequest.details} />
+          <ClientIntakeSummary details={goalRequest.details} compact />
         </div>
       ) : (
       <div className="grid gap-4 mb-6">

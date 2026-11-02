@@ -65,10 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const req = ++profileReq.current
           const p = await fetchProfile(session.user.id)
           if (!mounted) return
-          if (req !== profileReq.current) {
-            setLoading(false)
-            return
-          }
+          // A newer profile fetch is in flight; it will set the profile and clear loading.
+          if (req !== profileReq.current) return
           profileUserId.current = p ? session.user.id : null
           setProfile(p)
         }
