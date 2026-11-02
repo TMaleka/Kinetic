@@ -5,7 +5,7 @@ function Row({ label, value }: { label: string; value: ReactNode }) {
   if (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)) return null
   return (
     <div className="flex gap-3 py-1.5 text-sm">
-      <span className="w-40 shrink-0 text-xs text-[#64748b]">{label}</span>
+      <span className="w-32 shrink-0 text-xs text-[#64748b] sm:w-40">{label}</span>
       <span className="flex-1 font-medium text-[#0f2a3a]">{Array.isArray(value) ? value.join(', ') : value}</span>
     </div>
   )
@@ -23,12 +23,13 @@ function Section({ title, children, tone = 'blue' }: { title: string; children: 
 
 const yn = (v: string) => (v === 'yes' ? 'Yes' : v === 'no' ? 'No' : '')
 
-export function ClientIntakeSummary({ details }: { details: Partial<IntakeDetails> }) {
+// `compact` keeps a single column for narrow containers such as the dashboard review card.
+export function ClientIntakeSummary({ details, compact = false }: { details: Partial<IntakeDetails>; compact?: boolean }) {
   const d = details
   const lifts = (d.lifts || []).filter((l) => l.current || l.target).map((l) => `${l.lift}: ${l.current || '?'} → ${l.target || '?'} kg`)
   const healthFlags = d.doctorRestriction === 'yes' || d.painDuringExercise === 'yes'
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
+    <div className={`grid gap-3 ${compact ? '' : 'lg:grid-cols-2'}`}>
       <Section title="Goal & targets" tone="green">
         <Row label="Main goal" value={d.primaryGoal ? goalLabel(d.primaryGoal) : ''} />
         <Row label="Also wants" value={(d.secondaryGoals || []).map(goalLabel)} />
