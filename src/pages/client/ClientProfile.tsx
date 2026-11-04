@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { LogOut, UserPlus, X, Check, User, Mail, Calendar } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { Spinner } from '../../components/ui'
+import { Spinner, Hint } from '../../components/ui'
 import { formatDate, updateProfile, fetchClientInvitations, acceptInvitation, fetchClientTrainer } from '../../lib/queries'
 
 export function ClientProfile() {
@@ -15,6 +15,7 @@ export function ClientProfile() {
   const [invitations, setInvitations] = useState<any[]>([])
   const [accepting, setAccepting] = useState<string | null>(null)
   const [trainer, setTrainer] = useState<any>(null)
+  const [linksLoaded, setLinksLoaded] = useState(false)
   const [useMockData] = useState(false) // Set to false for production
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export function ClientProfile() {
     } catch (err) {
       console.error(err)
     }
+    setLinksLoaded(true)
   }
 
   const handleAcceptInvitation = async (invitationId: string) => {
@@ -109,6 +111,12 @@ export function ClientProfile() {
           <p className="mt-2 text-sm text-[#64748b]">Manage your personal information.</p>
         </div>
       </div>
+
+      {linksLoaded && !trainer && invitations.length === 0 && (
+        <Hint title="No trainer yet" icon={<UserPlus className="size-5" />}>
+          Ask your trainer to invite <b>{profile.email}</b>. Their invitation will appear here. Tap <b>Accept</b> to connect.
+        </Hint>
+      )}
 
       {/* Pending Invitations */}
       {invitations.length > 0 && (

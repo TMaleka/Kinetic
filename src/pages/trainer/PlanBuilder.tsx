@@ -342,6 +342,9 @@ export function PlanBuilder() {
                     </option>
                   ))}
                 </select>
+                {clients.length === 0 && (
+                  <p className="mt-2 text-xs text-[#64748b]">No clients yet, so this plan will be saved as a template. Invite a client from Clients, then assign it from their page.</p>
+                )}
               </div>
               {selectedClient && (
                 <>
@@ -367,7 +370,11 @@ export function PlanBuilder() {
                         onChange={(e) => setStartDate(e.target.value)}
                         className="w-full rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#68d6e8]"
                       />
+                      <p className="mt-2 text-xs text-[#64748b]">Day 1 is scheduled on this date and the other days follow. Your client sees each session on their Today and Workouts pages.</p>
                     </div>
+                  )}
+                  {!scheduleSessions && (
+                    <p className="text-xs text-[#f3263a]">Without scheduling, your client won't see any workouts in their app.</p>
                   )}
                 </>
               )}

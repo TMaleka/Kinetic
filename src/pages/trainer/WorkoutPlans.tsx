@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Plus, ChevronRight, Dumbbell, User, Calendar, Trash2 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { Spinner } from '../../components/ui'
+import { Spinner, Hint } from '../../components/ui'
 import { formatDate } from '../../lib/queries'
 
 export function WorkoutPlans() {
@@ -177,14 +177,13 @@ export function WorkoutPlans() {
           ))}
         </div>
       ) : (
-        <div className="flex items-center justify-center rounded-2xl border border-[#d9e9f2] bg-white p-12">
-          <div className="text-center">
-            <p className="text-sm text-[#64748b] mb-4">No workout plans yet</p>
-            <Link to="/trainer/plans/new" className="btn-primary">
-              Create your first plan
-            </Link>
-          </div>
-        </div>
+        <Hint
+          title="Build your first plan"
+          icon={<Dumbbell className="size-5" />}
+          action={<Link to="/trainer/plans/new" className="btn-primary">Create plan</Link>}
+        >
+          Add training days and exercises, then pick a client and keep <b>“Schedule sessions automatically”</b> ticked so the workouts show up in their app. No client yet? Save it as a template and assign it later from the client's page.
+        </Hint>
       )}
     </div>
   )
