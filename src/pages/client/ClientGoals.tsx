@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Pencil, Calendar, TrendingUp } from 'lucide-react'
+import { Pencil, Calendar, TrendingUp, Target } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { fetchGoalHistory } from '../../lib/activeGoal'
 import { intakeFromGoalRow } from '../../lib/intake'
 import { ClientIntakeSummary } from '../../components/ClientIntakeSummary'
 import { GoalTracker } from '../../components/GoalTracker'
-import { Spinner } from '../../components/ui'
+import { Spinner, Hint } from '../../components/ui'
 
 const STATUS: Record<string, [string, string]> = {
   pending: ['Waiting for trainer review', 'bg-[#fff4d6] text-[#a16207]'],
@@ -75,7 +75,13 @@ export function ClientGoals() {
           <button onClick={() => navigate('/app/progress')} className="flex w-fit items-center gap-2 text-xs font-semibold text-[#1787c4]"><TrendingUp className="size-4" />See all progress</button>
         </>
       ) : (
-        <section className="card p-6 text-sm text-[#64748b]">You haven't set a goal yet.</section>
+        <Hint
+          title="Set your first goal"
+          icon={<Target className="size-5" />}
+          action={<button onClick={() => navigate('/app/goals/edit')} className="btn-primary">Set my goals</button>}
+        >
+          Tell your trainer what you want to achieve: one main goal, measurable targets and a deadline. It takes about 3 minutes, and your trainer reviews it.
+        </Hint>
       )}
 
       {rows.length > 1 && (

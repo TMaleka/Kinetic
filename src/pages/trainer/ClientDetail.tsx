@@ -384,7 +384,7 @@ export function ClientDetail() {
           </div>
         ) : (
           <div className="mt-6 flex items-center justify-center rounded-xl bg-[#eef7fc] p-8">
-            <p className="text-sm text-[#64748b]">No plans assigned yet. Use "Assign workout" above.</p>
+            <p className="text-sm text-[#64748b]">No plans assigned yet. Tap “Assign workout” above to pick a plan and start date. The sessions then appear in your client's app.</p>
           </div>
         )}
       </section>

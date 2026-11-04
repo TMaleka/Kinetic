@@ -4,7 +4,7 @@ import { Dumbbell, Flame, TrendingUp, Calendar, ChevronRight, Check, Play } from
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { todayISO, toLocalISO, addDays, adherencePercent, computeStreak } from '../../lib/queries'
+import { todayISO, toLocalISO, addDays, adherencePercent, computeStreak, formatDate } from '../../lib/queries'
 import { WeeklyActivityChart } from '../../components/WeeklyActivityChart'
 
 function StatCard({ label, value, detail, icon: Icon, accent = 'lime' }: { label: string; value: string; detail: string; icon: any; accent?: 'lime' | 'lavender' | 'peach' }) {
@@ -36,6 +36,7 @@ export function ClientDashboard() {
   const [weightChange, setWeightChange] = useState<number | null>(null)
   const [goal, setGoal] = useState<string | null>(null)
   const [hasTrainer, setHasTrainer] = useState(false)
+  const [nextSession, setNextSession] = useState<any>(null)
   const [recentSessions, setRecentSessions] = useState<any[]>([])
   const [error, setError] = useState('')
   const [useMockData] = useState(false) // Set to false for production
@@ -79,6 +80,15 @@ export function ClientDashboard() {
         .order('created_at', { ascending: false })
         .limit(1)
       setTodaySession(todayData?.[0] ?? null)
+
+      const { data: nextData } = await supabase
+        .from('workout_sessions')
+        .select('id, title, scheduled_date')
+        .eq('client_id', profile.id)
+        .gt('scheduled_date', today)
+        .order('scheduled_date', { ascending: true })
+        .limit(1)
+      setNextSession(nextData?.[0] ?? null)
 
       // Last 12 weeks of sessions for streak, weekly stats and the activity chart
       const { data: sessionHistory } = await supabase
@@ -204,7 +214,13 @@ export function ClientDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Rest day</h2>
-              <p className="mt-1 text-xs text-[#64748b]">No workout scheduled today</p>
+              <p className="mt-1 text-xs text-[#64748b]">
+                {nextSession
+                  ? `No workout today. Next up: ${nextSession.title}, ${formatDate(nextSession.scheduled_date)}.`
+                  : hasTrainer
+                    ? "No workouts scheduled yet. They'll appear here once your trainer assigns a plan."
+                    : 'Connect with a trainer below to get your workouts.'}
+              </p>
             </div>
           </div>
         </section>

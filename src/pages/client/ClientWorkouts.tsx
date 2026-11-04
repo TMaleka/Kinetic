@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChevronRight, CheckCircle2, XCircle, PlayCircle, Calendar } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { Spinner } from '../../components/ui'
+import { Spinner, Hint } from '../../components/ui'
 import { formatDate, todayISO, toLocalISO, addDays, effectiveStatus } from '../../lib/queries'
 
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
@@ -299,9 +299,13 @@ export function ClientWorkouts() {
       )}
 
       {sessions.length === 0 && (
-        <div className="flex items-center justify-center rounded-2xl border border-[#d9e9f2] bg-white p-12">
-          <p className="text-sm text-[#64748b]">No workouts scheduled yet.</p>
-        </div>
+        <Hint
+          title="No workouts yet"
+          icon={<Calendar className="size-5" />}
+          action={<Link to="/app/profile" className="btn-secondary">Go to Profile</Link>}
+        >
+          Your workouts show up here once your trainer assigns you a plan. Not connected to a trainer yet? Accept their invitation on your Profile page.
+        </Hint>
       )}
     </div>
   )

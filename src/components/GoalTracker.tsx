@@ -143,7 +143,7 @@ export function GoalTracker({ clientId, canLog = true, refreshKey = 0 }: { clien
                           <p className="mt-1 text-[11px] font-semibold text-[#1787c4]">{pct}% of the way</p>
                         </div>
                       )}
-                      {pts.length === 0 && <p className="mt-1 text-[11px] text-[#64748b]">Nothing logged yet</p>}
+                      {pts.length === 0 && <p className="mt-1 text-[11px] text-[#64748b]">{canLog ? 'Nothing yet. Tap Log to add a reading.' : 'Nothing logged yet'}</p>}
                     </div>
                   )
                 })}

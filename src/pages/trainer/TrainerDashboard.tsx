@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChevronRight, CalendarDays, Target, Users, TrendingUp, ArrowUpRight, Plus, Activity, CheckCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { Spinner } from '../../components/ui'
+import { Spinner, Hint } from '../../components/ui'
 import { formatRelative, todayISO, addDays, toLocalISO, adherencePercent } from '../../lib/queries'
 import { TrainerGoalReview } from '../onboarding/TrainerGoalReview'
 import { intakeFromGoalRow } from '../../lib/intake'
@@ -370,6 +370,20 @@ export function TrainerDashboard() {
           <Plus className="size-4" />Create plan
         </Link>
       </div>
+
+      {activeClientsCount === 0 && pendingGoalReviews.length === 0 && (
+        <Hint
+          title="Get started in 3 steps"
+          icon={<Target className="size-5" />}
+          action={<Link to="/trainer/clients" className="btn-primary">Invite a client</Link>}
+        >
+          <ol className="list-decimal space-y-0.5 pl-4">
+            <li><b>Invite a client</b> from Clients. If the invite email doesn't arrive, copy the code and send it to them yourself.</li>
+            <li><b>Review their goal.</b> It appears here once they finish their intake.</li>
+            <li><b>Create a plan</b> for them and keep “Schedule sessions automatically” ticked.</li>
+          </ol>
+        </Hint>
+      )}
 
       <div className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
         <section className="card p-6">

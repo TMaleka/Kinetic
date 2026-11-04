@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Plus, Search, UserPlus, ChevronRight, Mail, Copy, Check } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { Spinner } from '../../components/ui'
+import { Spinner, Hint } from '../../components/ui'
 import { createInvitation, fetchTrainerInvitations, cancelInvitation, effectiveStatus, todayISO, sendInvitationEmail } from '../../lib/queries'
 
 type ClientRow = {
@@ -357,7 +357,7 @@ export function TrainerClients() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Pending invitations</h2>
-              <p className="mt-1 text-xs text-[#64748b]">Clients waiting to join your practice</p>
+              <p className="mt-1 text-xs text-[#64748b]">They join once they sign up with this email and tap Accept on their Profile page. No email? Copy the code and send it yourself.</p>
             </div>
           </div>
           <div className="mt-6 space-y-3">
@@ -440,12 +440,18 @@ export function TrainerClients() {
             </Link>
           ))}
         </div>
-      ) : (
+      ) : search || filter !== 'all' ? (
         <div className="flex items-center justify-center rounded-2xl border border-[#d9e9f2] bg-white p-12">
-          <p className="text-sm text-[#64748b]">
-            {search || filter !== 'all' ? 'No clients match your search or filter' : 'No clients yet — invite your first client above'}
-          </p>
+          <p className="text-sm text-[#64748b]">No clients match your search or filter</p>
         </div>
+      ) : (
+        <Hint
+          title="Invite your first client"
+          icon={<UserPlus className="size-5" />}
+          action={<button onClick={() => setShowAdd(true)} className="btn-primary">Invite client</button>}
+        >
+          Tap <b>Invite client</b> and enter their email. If the invite email doesn't arrive, tap <b>Copy</b> on the invitation and send them the code. They sign up with that email and tap <b>Accept</b> on their Profile page.
+        </Hint>
       )}
 
       {/* Add Client Modal */}

@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { X } from 'lucide-react'
+import { X, Lightbulb } from 'lucide-react'
 
 export function Modal({
   open,
@@ -114,6 +114,31 @@ export function EmptyState({
       <h3 className="text-lg font-semibold font-display mb-1">{title}</h3>
       {description && <p className="text-sm text-neutral-500 max-w-sm mb-4">{description}</p>}
       {action}
+    </div>
+  )
+}
+
+export function Hint({
+  title,
+  children,
+  icon,
+  action,
+}: {
+  title: string
+  children: ReactNode
+  icon?: ReactNode
+  action?: ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-4 rounded-2xl border border-[#cdeaf8] bg-[#eef8fd] p-5 sm:flex-row sm:items-center">
+      <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-[#1787c4]">
+        {icon ?? <Lightbulb className="size-5" />}
+      </div>
+      <div className="flex-1">
+        <p className="text-sm font-semibold text-[#0f2a3a]">{title}</p>
+        <div className="mt-1 text-xs leading-relaxed text-[#475569]">{children}</div>
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   )
 }

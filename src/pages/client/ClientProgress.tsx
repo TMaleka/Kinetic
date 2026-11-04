@@ -327,7 +327,7 @@ export function ClientProgress() {
             </div>
           ) : (
             <div className="mt-6 flex items-center justify-center rounded-xl bg-[#eef7fc] p-8">
-              <p className="text-sm text-[#64748b]">No photos yet</p>
+              <p className="max-w-xs text-center text-sm text-[#64748b]">No photos yet. Add one every few weeks to see changes the scale can't show. Only you and your trainer can see them.</p>
             </div>
           )}
         </section>
@@ -357,7 +357,7 @@ export function ClientProgress() {
             ))
           ) : (
             <div className="flex items-center justify-center rounded-xl bg-[#eef7fc] p-8">
-              <p className="text-sm text-[#64748b]">No measurements logged yet</p>
+              <p className="max-w-xs text-center text-sm text-[#64748b]">No measurements yet. Tap “Log measurement” at the top, or Log on a goal card.</p>
             </div>
           )}
         </div>
