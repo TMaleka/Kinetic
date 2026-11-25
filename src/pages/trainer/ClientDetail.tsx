@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ChevronRight, TrendingUp, Flame, Dumbbell, Plus, Target, Scale } from 'lucide-react'
+import { ChevronRight, TrendingUp, Flame, Dumbbell, Plus, Target, Scale, MessageCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
-import { formatDate, formatRelative, fetchClientActivity, addActivityEvent, scheduleSessionsFromPlan, todayISO, effectiveStatus, adherencePercent, computeStreak, withSignedPhotoUrls } from '../../lib/queries'
+import { formatDate, formatRelative, fetchClientActivity, addActivityEvent, scheduleSessionsFromPlan, todayISO, toLocalISO, addDays, effectiveStatus, adherencePercent, computeStreak, withSignedPhotoUrls } from '../../lib/queries'
 import { createNotification } from '../../lib/notifications'
 import { WeeklyActivityChart } from '../../components/WeeklyActivityChart'
 import { ClientIntakeSummary } from '../../components/ClientIntakeSummary'
 import { GoalTracker } from '../../components/GoalTracker'
 import { intakeFromGoalRow } from '../../lib/intake'
+import { TrainerCheckins } from '../../components/TrainerCheckins'
+import { nudgeMessage, whatsappLink, type NudgeReason } from '../../lib/reminders'
 
 function StatCard({ label, value, detail, icon: Icon, accent = 'lime' }: { label: string; value: string; detail: string; icon: any; accent?: 'lime' | 'lavender' | 'peach' }) {
   const bg = accent === 'lime' ? 'bg-[#d6f0e3]' : accent === 'lavender' ? 'bg-[#d4f4f9]' : 'bg-[#dff2fc]'
@@ -218,6 +220,11 @@ export function ClientDetail() {
   const adherenceRate = adherencePercent(sessions)
   const streak = computeStreak(sessions)
 
+  const missedRecent = sessions.filter(
+    (s) => effectiveStatus(s) === 'missed' && s.scheduled_date >= toLocalISO(addDays(new Date(), -7)),
+  ).length
+  const nudgeReason: NudgeReason = missedRecent > 0 ? 'missed_workout' : 'general'
+
   const weightData = measurements
     .filter((m) => m.body_weight != null)
     .map((m) => ({
@@ -268,6 +275,15 @@ export function ClientDetail() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <a
+            href={whatsappLink(client.phone, nudgeMessage(nudgeReason, client.full_name, profile?.full_name || ''))}
+            target="_blank"
+            rel="noreferrer"
+            title={client.phone ? `WhatsApp ${client.phone}` : "No phone number on the client's profile. WhatsApp will ask you to pick the contact."}
+            className="flex w-fit items-center gap-2 rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-xs font-semibold text-[#334155] hover:bg-[#eef7fc]"
+          >
+            <MessageCircle className="size-4 text-[#1787c4]" />{nudgeReason === 'missed_workout' ? 'Nudge on WhatsApp' : 'WhatsApp'}
+          </a>
           <button
             onClick={() => setShowAddMeasurement(true)}
             className="flex w-fit items-center gap-2 rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-xs font-semibold text-[#334155] hover:bg-[#eef7fc]"
@@ -334,6 +350,8 @@ export function ClientDetail() {
           </div>
         </section>
       </div>
+
+      {clientId && <TrainerCheckins clientId={clientId} clientName={client.full_name} clientPhone={client.phone} />}
 
       {clientId && <GoalTracker clientId={clientId} />}
 

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Dumbbell, Flame, TrendingUp, Calendar, ChevronRight, Check, Play } from 'lucide-react'
+import { Dumbbell, Flame, TrendingUp, Calendar, ChevronRight, Check, Play, ClipboardCheck, MessageCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner } from '../../components/ui'
 import { todayISO, toLocalISO, addDays, adherencePercent, computeStreak, formatDate } from '../../lib/queries'
 import { WeeklyActivityChart } from '../../components/WeeklyActivityChart'
+import { fetchCheckins, weekStartISO, type WeeklyCheckin } from '../../lib/checkins'
+import { ensureClientReminders } from '../../lib/reminders'
 
 function StatCard({ label, value, detail, icon: Icon, accent = 'lime' }: { label: string; value: string; detail: string; icon: any; accent?: 'lime' | 'lavender' | 'peach' }) {
   const bg = accent === 'lime' ? 'bg-[#d6f0e3]' : accent === 'lavender' ? 'bg-[#d4f4f9]' : 'bg-[#dff2fc]'
@@ -39,6 +41,7 @@ export function ClientDashboard() {
   const [nextSession, setNextSession] = useState<any>(null)
   const [recentSessions, setRecentSessions] = useState<any[]>([])
   const [error, setError] = useState('')
+  const [checkin, setCheckin] = useState<WeeklyCheckin | null | undefined>(undefined)
   const [useMockData] = useState(false) // Set to false for production
 
   useEffect(() => {
@@ -132,6 +135,20 @@ export function ClientDashboard() {
         .maybeSingle()
       setGoal(linkGoals?.goals || null)
       setHasTrainer(!!linkGoals?.trainer_id)
+
+      // Weekly check-in for this week (undefined = feature not available yet)
+      const weekStart = weekStartISO()
+      let thisWeek: WeeklyCheckin | null | undefined
+      try {
+        const rows = await fetchCheckins([profile.id], 1)
+        thisWeek = rows === null ? undefined : rows.find((r) => r.week_start === weekStart) ?? null
+      } catch (err) {
+        console.error(err)
+      }
+      setCheckin(thisWeek)
+      ensureClientReminders(profile.id, thisWeek === undefined ? null : weekStart, thisWeek === undefined ? null : !!thisWeek).catch((err) =>
+        console.error('Reminders failed:', err),
+      )
     } catch (err) {
       console.error(err)
       setError('Failed to load dashboard data. Please refresh the page.')
@@ -222,6 +239,34 @@ export function ClientDashboard() {
                     : 'Connect with a trainer below to get your workouts.'}
               </p>
             </div>
+          </div>
+        </section>
+      )}
+
+      {checkin !== undefined && hasTrainer && (
+        <section className="card p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className={`grid size-10 shrink-0 place-items-center rounded-xl ${checkin ? 'bg-[#d6f0e3] text-[#075a38]' : 'bg-[#dff2fc] text-[#1787c4]'}`}>
+                {checkin ? <Check className="size-4" /> : <ClipboardCheck className="size-4" />}
+              </div>
+              <div>
+                <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">{checkin ? 'Checked in this week' : 'Weekly check-in'}</h2>
+                <p className="mt-1 text-xs text-[#64748b]">
+                  {checkin
+                    ? checkin.trainer_reply ? 'Your trainer replied.' : 'Your trainer can see it now.'
+                    : '5 quick questions about your week. Your trainer uses it to plan next week.'}
+                </p>
+                {checkin?.trainer_reply && (
+                  <p className="mt-3 flex gap-2 rounded-xl bg-[#eef7fc] p-3 text-sm text-[#334155]">
+                    <MessageCircle className="mt-0.5 size-4 shrink-0 text-[#1787c4]" />{checkin.trainer_reply}
+                  </p>
+                )}
+              </div>
+            </div>
+            <Link to="/app/checkin" className={checkin ? 'btn-secondary w-fit shrink-0' : 'w-fit shrink-0 rounded-xl bg-[#f3263a] px-4 py-3 text-xs font-semibold text-white hover:bg-[#d01a2d] transition'}>
+              {checkin ? 'View' : 'Check in'}
+            </Link>
           </div>
         </section>
       )}

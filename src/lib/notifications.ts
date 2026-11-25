@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 export type Notification = {
   id: string
   user_id: string
-  type: 'workout_reminder' | 'workout_completed' | 'workout_missed' | 'measurement_logged' | 'photo_uploaded' | 'client_linked' | 'plan_assigned' | 'goal_updated'
+  type: 'workout_reminder' | 'workout_completed' | 'workout_missed' | 'measurement_logged' | 'photo_uploaded' | 'client_linked' | 'plan_assigned' | 'goal_updated' | 'checkin_due' | 'checkin_submitted' | 'checkin_reply'
   title: string
   message: string
   metadata: Record<string, unknown> | null
@@ -61,7 +61,7 @@ export async function subscribeToNotifications(
   callback: (notification: Notification) => void
 ) {
   return supabase
-    .channel(`notifications:${userId}`)
+    .channel(`notifications:${userId}:${Math.random().toString(36).slice(2)}`)
     .on(
       'postgres_changes',
       {

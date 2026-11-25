@@ -86,6 +86,20 @@ supabase functions deploy send-invite --project-ref <ref>
 supabase secrets set --project-ref <ref> RESEND_API_KEY=... INVITE_FROM_EMAIL="KineTic <invites@yourdomain.com>" APP_URL=https://your-app.vercel.app
 ```
 
+### Weekly check-ins and reminders
+Run `supabase/migrations/20261125000000_011_weekly_checkins.sql` in the SQL editor. It adds the `weekly_checkins` table, the `reply_to_checkin` function and the `profiles.email_reminders` opt-out. Until it runs, the check-in screens stay hidden.
+
+These reminders need no setup: in-app reminders (today's workout, yesterday's missed session, check-in due from Friday), the client's "Add to calendar" button on Workouts, and the trainer's WhatsApp nudge buttons.
+
+Optional daily reminder emails (06:00 SAST) use the `send-reminders` Edge Function and the same Resend key as invite emails:
+
+```bash
+supabase functions deploy send-reminders --project-ref <ref> --no-verify-jwt
+supabase secrets set --project-ref <ref> RESEND_API_KEY=... APP_URL=https://your-app.vercel.app CRON_SECRET=<long random string>
+```
+
+Then put the same `CRON_SECRET` in `supabase/setup/reminders_cron.sql` and run it in the SQL editor. Check-in reminder emails go out on Fridays (`CHECKIN_REMINDER_DAY`, 0 = Sunday). Call the function with `?dry=1` to see who would be emailed without sending.
+
 ### Additional Tables for Onboarding
 ```sql
 -- Add onboarding field to profiles

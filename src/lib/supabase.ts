@@ -25,6 +25,7 @@ export type Profile = {
   location: string | null
   specialization: string | null
   onboarding_completed: boolean
+  email_reminders?: boolean
   created_at: string
   updated_at: string
 }

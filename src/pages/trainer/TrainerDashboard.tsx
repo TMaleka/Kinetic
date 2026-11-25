@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight, CalendarDays, Target, Users, TrendingUp, ArrowUpRight, Plus, Activity, CheckCircle } from 'lucide-react'
+import { ChevronRight, CalendarDays, Target, Users, TrendingUp, ArrowUpRight, Plus, Activity, CheckCircle, MessageCircle, ClipboardCheck } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner, Hint } from '../../components/ui'
 import { formatRelative, todayISO, addDays, toLocalISO, adherencePercent } from '../../lib/queries'
 import { TrainerGoalReview } from '../onboarding/TrainerGoalReview'
 import { intakeFromGoalRow } from '../../lib/intake'
+import { checkinFlags, fetchCheckins, weekStartISO } from '../../lib/checkins'
+import { nudgeMessage, whatsappLink } from '../../lib/reminders'
 
 type AttentionItem = {
   clientId: string
   clientName: string
   avatarUrl: string | null
-  reason: 'missed_workout' | 'no_activity' | 'new_photo'
+  phone?: string | null
+  reason: 'missed_workout' | 'no_activity' | 'new_photo' | 'checkin_flag'
   details: string
 }
 
@@ -67,6 +70,7 @@ export function TrainerDashboard() {
   const [useMockData] = useState(false) // Set to false for production
   const [pendingGoalReviews, setPendingGoalReviews] = useState<any[]>([])
   const [error, setError] = useState('')
+  const [checkinSummary, setCheckinSummary] = useState<{ done: number; missing: { id: string; name: string; phone: string | null }[] } | null>(null)
 
   useEffect(() => {
     if (!profile) return
@@ -146,7 +150,7 @@ export function TrainerDashboard() {
     try {
       const { data: links } = await supabase
         .from('trainer_client_links')
-        .select('client_id, started_at, client:profiles!client_id(id, full_name, avatar_url)')
+        .select('client_id, started_at, client:profiles!client_id(id, full_name, avatar_url, phone)')
         .eq('trainer_id', profile.id)
         .eq('status', 'active')
 
@@ -235,6 +239,7 @@ export function TrainerDashboard() {
             clientId: l.client_id,
             clientName: l.client?.full_name || '',
             avatarUrl: l.client?.avatar_url,
+            phone: l.client?.phone,
             reason: 'missed_workout',
             details: `Missed ${missedCount} workouts`,
           })
@@ -243,6 +248,7 @@ export function TrainerDashboard() {
             clientId: l.client_id,
             clientName: l.client?.full_name || '',
             avatarUrl: l.client?.avatar_url,
+            phone: l.client?.phone,
             reason: 'no_activity',
             details: `No activity for ${lastActivity.daysInactive} days`,
           })
@@ -256,6 +262,30 @@ export function TrainerDashboard() {
           })
         }
       })
+
+      // This week's check-ins: flag tough weeks and list who hasn't checked in
+      try {
+        const weekStart = weekStartISO()
+        const checkins = await fetchCheckins(clientIds, 500)
+        if (checkins === null) setCheckinSummary(null)
+        else {
+          const thisWeek = checkins.filter((c) => c.week_start === weekStart)
+          const done = new Set(thisWeek.map((c) => c.client_id))
+          thisWeek.forEach((c) => {
+            const flags = checkinFlags(c)
+            const l: any = (links || []).find((x: any) => x.client_id === c.client_id)
+            if (flags.length && l && !items.some((i) => i.clientId === c.client_id)) {
+              items.push({ clientId: c.client_id, clientName: l.client?.full_name || '', avatarUrl: l.client?.avatar_url, phone: l.client?.phone, reason: 'checkin_flag', details: `Check-in: ${flags.join(', ').toLowerCase()}` })
+            }
+          })
+          setCheckinSummary({
+            done: done.size,
+            missing: (links || []).filter((l: any) => !done.has(l.client_id)).map((l: any) => ({ id: l.client_id, name: l.client?.full_name || 'Client', phone: l.client?.phone ?? null })),
+          })
+        }
+      } catch (err) {
+        console.error('Check-ins failed to load:', err)
+      }
 
       setAttentionItems(items.slice(0, 5))
 
@@ -478,18 +508,20 @@ export function TrainerDashboard() {
           <div className="mt-6 space-y-3">
             {attentionItems.length > 0 ? (
               attentionItems.slice(0, 3).map((item) => (
+                <div key={item.clientId} className="flex items-center gap-2 rounded-xl border border-[#e3eff6] pr-2 hover:bg-[#eef7fc] transition">
                 <Link
-                  key={item.clientId}
                   to={`/trainer/clients/${item.clientId}`}
-                  className="flex items-center gap-4 rounded-xl border border-[#e3eff6] p-4 hover:bg-[#eef7fc] transition"
+                  className="flex flex-1 items-center gap-4 p-4"
                 >
                   <div className={`grid size-10 place-items-center rounded-full ${
                     item.reason === 'missed_workout' ? 'bg-[#fde3e6] text-[#f3263a]' :
                     item.reason === 'no_activity' ? 'bg-[#dff2fc] text-[#1787c4]' :
+                    item.reason === 'checkin_flag' ? 'bg-[#fde3e6] text-[#f3263a]' :
                     'bg-[#d6f0e3] text-[#075a38]'
                   }`}>
                     {item.reason === 'missed_workout' ? '!' :
                      item.reason === 'no_activity' ? '⚠' :
+                     item.reason === 'checkin_flag' ? <ClipboardCheck className="size-4" /> :
                      '📷'}
                   </div>
                   <div className="flex-1">
@@ -498,6 +530,19 @@ export function TrainerDashboard() {
                   </div>
                   <ChevronRight className="size-4 text-[#94a3b8]" />
                 </Link>
+                {item.reason !== 'new_photo' && (
+                  <a
+                    href={whatsappLink(item.phone, nudgeMessage(item.reason, item.clientName, profile?.full_name || ''))}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Message ${item.clientName} on WhatsApp`}
+                    title="Nudge on WhatsApp"
+                    className="grid size-9 shrink-0 place-items-center rounded-xl border border-[#d9e9f2] bg-white text-[#1787c4] hover:bg-[#e0f2fb]"
+                  >
+                    <MessageCircle className="size-4" />
+                  </a>
+                )}
+                </div>
               ))
             ) : (
               <div className="flex items-center justify-center rounded-xl bg-[#eef7fc] p-8">
@@ -508,6 +553,37 @@ export function TrainerDashboard() {
         </section>
 
       </div>
+
+      {checkinSummary && activeClientsCount > 0 && (
+        <section className="card p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Weekly check-ins</h2>
+              <p className="mt-1 text-xs text-[#64748b]">{checkinSummary.done} of {activeClientsCount} clients checked in this week</p>
+            </div>
+            <div className="h-2 w-40 overflow-hidden rounded-full bg-[#dcecf5]">
+              <div className="h-full rounded-full bg-[#28a9e8]" style={{ width: `${Math.round((checkinSummary.done / activeClientsCount) * 100)}%` }} />
+            </div>
+          </div>
+          {checkinSummary.missing.length > 0 && [0, 5, 6].includes(new Date().getDay()) && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {checkinSummary.missing.slice(0, 8).map((c) => (
+                <a
+                  key={c.id}
+                  href={whatsappLink(c.phone, nudgeMessage('checkin_due', c.name, profile?.full_name || ''))}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Remind on WhatsApp"
+                  className="flex items-center gap-1.5 rounded-full border border-[#d9e9f2] bg-white px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#eef7fc]"
+                >
+                  <MessageCircle className="size-3.5 text-[#1787c4]" />{c.name}
+                </a>
+              ))}
+              {checkinSummary.missing.length > 8 && <span className="px-2 py-1.5 text-xs text-[#64748b]">+{checkinSummary.missing.length - 8} more</span>}
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard

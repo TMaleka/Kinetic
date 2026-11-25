@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight, CheckCircle2, XCircle, PlayCircle, Calendar } from 'lucide-react'
+import { ChevronRight, CheckCircle2, XCircle, PlayCircle, Calendar, BellRing } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner, Hint } from '../../components/ui'
 import { formatDate, todayISO, toLocalISO, addDays, effectiveStatus } from '../../lib/queries'
+import { buildSessionsCalendar, downloadCalendar } from '../../lib/reminders'
 
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
@@ -13,6 +14,9 @@ export function ClientWorkouts() {
   const [sessions, setSessions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [weekData, setWeekData] = useState<any[]>([])
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [trainTime, setTrainTime] = useState(() => localStorage.getItem('kinetic:trainTime') || '17:30')
+  const [alertMinutes, setAlertMinutes] = useState(60)
   const [useMockData] = useState(false) // Set to false for production
 
   useEffect(() => {
@@ -148,6 +152,13 @@ export function ClientWorkouts() {
   const completed = sessions.filter((s) => s.status === 'completed')
   const missed = sessions.filter((s) => s.status === 'missed')
 
+  const handleAddToCalendar = () => {
+    localStorage.setItem('kinetic:trainTime', trainTime)
+    const today = todayISO()
+    downloadCalendar(buildSessionsCalendar(upcoming.filter((s) => s.scheduled_date >= today), trainTime, 60, alertMinutes))
+    setShowCalendar(false)
+  }
+
   const statusIcon = (status: string) => {
     switch (status) {
       case 'completed': return <CheckCircle2 size={20} />
@@ -165,7 +176,42 @@ export function ClientWorkouts() {
           <h1 className="font-display text-4xl font-semibold tracking-tight text-[#0f2a3a]">Workouts</h1>
           <p className="mt-2 text-sm text-[#64748b]">Track your training progress.</p>
         </div>
+        {upcoming.length > 0 && (
+          <button onClick={() => setShowCalendar(true)} className="flex w-fit items-center gap-2 rounded-xl border border-[#d9e9f2] bg-white px-4 py-3 text-xs font-semibold text-[#334155] hover:bg-[#eef7fc]">
+            <BellRing className="size-4 text-[#1787c4]" />Remind me: add to calendar
+          </button>
+        )}
       </div>
+
+      {showCalendar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6" onClick={() => setShowCalendar(false)}>
+          <div className="card w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
+            <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Get workout reminders</h2>
+            <p className="mt-2 text-xs leading-relaxed text-[#64748b]">
+              Adds your {upcoming.length} upcoming {upcoming.length === 1 ? 'workout' : 'workouts'} to your phone's calendar with an alert, so you get a reminder even when KineTic is closed. Do this again when your trainer assigns a new plan.
+            </p>
+            <div className="mt-5 space-y-4">
+              <div>
+                <label className="label">I usually train at</label>
+                <input type="time" className="input" value={trainTime} onChange={(e) => setTrainTime(e.target.value || '17:30')} />
+              </div>
+              <div>
+                <label className="label">Remind me</label>
+                <select className="input" value={alertMinutes} onChange={(e) => setAlertMinutes(Number(e.target.value))}>
+                  <option value={30}>30 minutes before</option>
+                  <option value={60}>1 hour before</option>
+                  <option value={120}>2 hours before</option>
+                  <option value={720}>The morning of (12 hours before)</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button className="btn-secondary flex-1" onClick={() => setShowCalendar(false)}>Cancel</button>
+                <button className="btn-primary flex-1" onClick={handleAddToCalendar}>Add to calendar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* This Week */}
       <section className="card p-6">

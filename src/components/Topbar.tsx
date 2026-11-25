@@ -27,11 +27,13 @@ const HELP: Record<Role, { title: string; body: string }[]> = {
     { title: 'Build a plan', body: 'Workout plans → Create plan. Add days and exercises, then either assign it to a client straight away or save it as a template.' },
     { title: 'Assign workouts', body: 'Open a client and click "Assign workout". Keep "Schedule sessions automatically" ticked so the workouts appear on the client\'s calendar.' },
     { title: 'Review goals', body: 'New clients\' onboarding goals appear on your Overview under "Pending goal reviews".' },
+    { title: 'Check-ins and nudges', body: 'Clients send a weekly check-in from their Today screen. Read and reply on the client\'s page. Use the WhatsApp buttons to nudge clients who missed a session or haven\'t checked in.' },
   ],
   client: [
     { title: 'Connect with a trainer', body: 'Ask your trainer to invite you using the email you signed up with. Pending invitations show on your Profile page.' },
     { title: 'Do a workout', body: 'Open Workouts (or Today) and tap a scheduled session. Log your reps and weight, tick each set, then complete the workout.' },
     { title: 'Track progress', body: 'Use My progress to log your weight and add progress photos. Your trainer can see these too.' },
+    { title: 'Weekly check-in and reminders', body: 'Send your weekly check-in from the Today screen. On Workouts, tap "Remind me: add to calendar" to get alerts on your phone before each workout.' },
   ],
 };
 

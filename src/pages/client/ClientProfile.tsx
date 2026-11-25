@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { LogOut, UserPlus, X, Check, User, Mail, Calendar } from 'lucide-react'
+import { LogOut, UserPlus, X, Check, User, Mail, Calendar, BellRing } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { Spinner, Hint } from '../../components/ui'
 import { formatDate, updateProfile, fetchClientInvitations, acceptInvitation, fetchClientTrainer } from '../../lib/queries'
+import { supabase } from '../../lib/supabase'
 
 export function ClientProfile() {
   const { profile, signOut, refreshProfile } = useAuth()
@@ -16,6 +17,7 @@ export function ClientProfile() {
   const [accepting, setAccepting] = useState<string | null>(null)
   const [trainer, setTrainer] = useState<any>(null)
   const [linksLoaded, setLinksLoaded] = useState(false)
+  const [savingReminders, setSavingReminders] = useState(false)
   const [useMockData] = useState(false) // Set to false for production
 
   useEffect(() => {
@@ -92,6 +94,20 @@ export function ClientProfile() {
       alert(`Failed to save profile: ${err?.message || 'Unknown error'}`)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const toggleEmailReminders = async () => {
+    if (!profile) return
+    setSavingReminders(true)
+    try {
+      const { error } = await supabase.from('profiles').update({ email_reminders: !(profile.email_reminders ?? true) }).eq('id', profile.id)
+      if (error) throw error
+      await refreshProfile()
+    } catch (err: any) {
+      alert(`Could not update reminders: ${err?.message || 'Unknown error'}`)
+    } finally {
+      setSavingReminders(false)
     }
   }
 
@@ -214,9 +230,10 @@ export function ClientProfile() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1 555 000 0000"
+                placeholder="082 123 4567"
                 className="input"
               />
+              <p className="mt-1 text-[11px] text-[#94a3b8]">Your trainer can use it to message you on WhatsApp.</p>
             </div>
             <div className="flex gap-3 mt-6">
               <button onClick={() => setEditing(false)} className="btn-secondary flex-1">
@@ -270,6 +287,32 @@ export function ClientProfile() {
           </div>
         )}
       </section>
+
+      {profile.email_reminders !== undefined && (
+        <section className="card p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#dff2fc] text-[#1787c4]">
+                <BellRing className="size-4" />
+              </div>
+              <div>
+                <h2 className="font-display text-xl font-semibold text-[#0f2a3a]">Reminder emails</h2>
+                <p className="mt-1 text-xs text-[#64748b]">A short email on workout days and when your weekly check-in is due.</p>
+              </div>
+            </div>
+            <button
+              role="switch"
+              aria-checked={profile.email_reminders}
+              aria-label="Reminder emails"
+              disabled={savingReminders}
+              onClick={toggleEmailReminders}
+              className={`relative h-7 w-12 shrink-0 rounded-full transition ${profile.email_reminders ? 'bg-[#28a9e8]' : 'bg-[#cbd5e1]'}`}
+            >
+              <span className={`absolute top-1 size-5 rounded-full bg-white shadow transition-all ${profile.email_reminders ? 'left-6' : 'left-1'}`} />
+            </button>
+          </div>
+        </section>
+      )}
 
       <button
         onClick={handleSignOut}
