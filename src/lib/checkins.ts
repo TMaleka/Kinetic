@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { addDays, toLocalISO } from './queries'
+import { addDays, toLocalISO, todayISO } from './queries'
 
 export type WeeklyCheckin = {
   id: string
@@ -14,6 +14,7 @@ export type WeeklyCheckin = {
   wins: string | null
   struggles: string | null
   body_weight: number | null
+  measurement_id?: string | null
   trainer_reply: string | null
   replied_at: string | null
   created_at: string
@@ -91,3 +92,62 @@ export function formatWeek(weekStart: string): string {
   const [y, m, d] = weekStart.split('-').map(Number)
   return `Week of ${new Date(y, m - 1, d).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}`
 }
+
+/**
+ * Mirrors the saved check-in weight into a single measurement row (linked via measurement_id)
+ * so adding, correcting or removing it updates the progress charts.
+ * `previousWeight` is the weight before this save (undefined for a new check-in).
+ */
+export async function syncCheckinWeight(checkin: WeeklyCheckin, previousWeight: number | null | undefined) {
+  const weight = checkin.body_weight != null ? Number(checkin.body_weight) : null
+  const prev = previousWeight != null ? Number(previousWeight) : null
+  const insertMeasurement = async () => {
+    const { data, error } = await supabase
+      .from('measurements')
+      .insert({ client_id: checkin.client_id, body_weight: weight, logged_at: todayISO(), notes: CHECKIN_NOTE })
+      .select('id')
+      .single()
+    if (error) throw error
+    return data.id as string
+  }
+
+  if (!('measurement_id' in checkin)) {
+    // Migration 012 not applied yet: no link column, so only log new or changed weights.
+    if (weight != null && weight !== prev) await insertMeasurement()
+    return
+  }
+
+  let measurementId = checkin.measurement_id ?? null
+  if (!measurementId && prev != null) {
+    // Check-ins saved before migration 012 logged an unlinked measurement; adopt it.
+    const { data } = await supabase
+      .from('measurements')
+      .select('id')
+      .eq('client_id', checkin.client_id)
+      .eq('notes', CHECKIN_NOTE)
+      .eq('body_weight', prev)
+      .gte('created_at', new Date(new Date(checkin.created_at).getTime() - 60000).toISOString())
+      .order('created_at', { ascending: true })
+      .limit(1)
+    measurementId = data?.[0]?.id ?? null
+  }
+
+  if (measurementId) {
+    if (weight == null) {
+      await supabase.from('weekly_checkins').update({ measurement_id: null }).eq('id', checkin.id)
+      await supabase.from('measurements').delete().eq('id', measurementId)
+      return
+    }
+    if (weight !== prev) {
+      const { error } = await supabase.from('measurements').update({ body_weight: weight }).eq('id', measurementId)
+      if (error) throw error
+    }
+    if (measurementId !== checkin.measurement_id) await supabase.from('weekly_checkins').update({ measurement_id: measurementId }).eq('id', checkin.id)
+    return
+  }
+  if (weight == null) return
+  const id = await insertMeasurement()
+  await supabase.from('weekly_checkins').update({ measurement_id: id }).eq('id', checkin.id)
+}
+
+const CHECKIN_NOTE = 'From weekly check-in'

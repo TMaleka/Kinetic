@@ -85,6 +85,7 @@ Deno.serve(async (req) => {
     for (const l of links || []) {
       const c = l.client as { email?: string; full_name?: string; email_reminders?: boolean } | null
       if (doneIds.has(l.client_id) || !c?.email || c.email_reminders === false) continue
+      doneIds.add(l.client_id) // one email per client, even with several trainers
       reminders.push({
         userId: l.client_id, email: c.email, name: c.full_name || '', type: 'checkin_due',
         title: 'Your weekly check-in',
@@ -95,15 +96,16 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Skip anything already notified (re-runs, or the app created the in-app reminder first).
+  // Skip anything already emailed. reminder_log is only writable by the service role,
+  // so other users can't suppress reminders by inserting look-alike notifications.
+  const refOf = (r: Reminder) => (r.type === 'workout_reminder' ? r.metadata.session_id : r.metadata.week_start)
   const userIds = [...new Set(reminders.map((r) => r.userId))]
-  const { data: existing } = userIds.length
-    ? await db.from('notifications').select('user_id, type, metadata').in('user_id', userIds).in('type', ['workout_reminder', 'checkin_due']).gte('created_at', new Date(Date.now() - 8 * 864e5).toISOString())
-    : { data: [] }
-  const emailed = (r: Reminder) =>
-    (existing || []).some((n: any) => n.user_id === r.userId && n.type === r.type && n.metadata?.emailed &&
-      (r.type === 'workout_reminder' ? n.metadata?.session_id === r.metadata.session_id : n.metadata?.week_start === r.metadata.week_start))
-  const pending = reminders.filter((r) => !emailed(r))
+  const { data: logged, error: logErr } = userIds.length
+    ? await db.from('reminder_log').select('user_id, kind, ref').in('user_id', userIds)
+    : { data: [], error: null }
+  if (logErr) return json({ error: `reminder_log: ${logErr.message} (run migration 012)` }, 500)
+  const sentKeys = new Set((logged || []).map((l) => `${l.user_id}|${l.kind}|${l.ref}`))
+  const pending = reminders.filter((r) => !sentKeys.has(`${r.userId}|${r.type}|${refOf(r)}`))
 
   if (dry) return json({ date, weekday, weekStart, wouldSend: pending.map((r) => ({ email: r.email, type: r.type, title: r.title })) })
 
@@ -120,6 +122,7 @@ Deno.serve(async (req) => {
       continue
     }
     sent++
+    await db.from('reminder_log').insert({ user_id: r.userId, kind: r.type, ref: refOf(r) })
     const metadata = { ...r.metadata, emailed: true }
     const { error: insertError } = await db.from('notifications').insert({ user_id: r.userId, type: r.type, title: r.title, message: r.body, metadata, read: false })
     if (insertError) {
