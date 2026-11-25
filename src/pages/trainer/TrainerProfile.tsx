@@ -36,7 +36,7 @@ export function TrainerProfile() {
     try {
       await updateProfile(profile.id, {
         full_name: fullName,
-        phone: phone || undefined,
+        phone: phone.trim() || null,
         bio: bio || undefined,
         location: location || undefined,
         specialization: specialization || undefined,

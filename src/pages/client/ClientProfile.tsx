@@ -85,7 +85,7 @@ export function ClientProfile() {
     try {
       await updateProfile(profile.id, {
         full_name: fullName,
-        phone: phone || undefined,
+        phone: phone.trim() || null,
       })
       await refreshProfile()
       setEditing(false)

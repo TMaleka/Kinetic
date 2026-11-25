@@ -94,9 +94,10 @@ export function downloadCalendar(ics: string, filename = 'kinetic-workouts.ics')
 }
 
 /**
- * Creates today's in-app reminders for a client (once per day): today's workout,
- * yesterday's missed session, and the weekly check-in from Friday onwards.
- * Safe to call on every app load: existing reminders are detected via metadata.
+ * Creates today's in-app reminders for a client: today's workout, yesterday's missed
+ * session, and the weekly check-in from Friday onwards. Safe to call on every app load:
+ * existing reminders are detected via metadata (and a unique index), so a plan assigned
+ * later the same day still gets its reminder.
  */
 const inFlight = new Map<string, Promise<void>>()
 
@@ -109,8 +110,6 @@ export function ensureClientReminders(clientId: string, checkinWeekStart: string
 }
 
 async function createClientReminders(clientId: string, checkinWeekStart: string | null, hasCheckin: boolean | null) {
-  const key = `kinetic:reminders:${clientId}:${todayISO()}`
-  if (localStorage.getItem(key)) return
   const today = todayISO()
   const yesterday = toLocalISO(addDays(new Date(), -1))
 
@@ -141,5 +140,4 @@ async function createClientReminders(clientId: string, checkinWeekStart: string 
   if (checkinWeekStart && hasCheckin === false && (day === 5 || day === 6 || day === 0) && !has('checkin_due', 'week_start', checkinWeekStart)) {
     await createNotification(clientId, 'checkin_due', 'Weekly check-in', 'How was your week? Your 30-second check-in helps your trainer plan next week.', { week_start: checkinWeekStart })
   }
-  localStorage.setItem(key, '1')
 }
