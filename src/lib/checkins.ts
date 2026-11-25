@@ -138,10 +138,8 @@ export async function syncCheckinWeight(checkin: WeeklyCheckin, previousWeight: 
       await supabase.from('measurements').delete().eq('id', measurementId)
       return
     }
-    if (weight !== prev) {
-      const { error } = await supabase.from('measurements').update({ body_weight: weight }).eq('id', measurementId)
-      if (error) throw error
-    }
+    const { error } = await supabase.from('measurements').update({ body_weight: weight }).eq('id', measurementId)
+    if (error) throw error
     if (measurementId !== checkin.measurement_id) await supabase.from('weekly_checkins').update({ measurement_id: measurementId }).eq('id', checkin.id)
     return
   }
