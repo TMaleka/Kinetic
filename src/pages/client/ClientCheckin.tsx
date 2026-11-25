@@ -94,7 +94,7 @@ export function ClientCheckin() {
         struggles,
         body_weight: bodyWeight,
       })
-      await syncCheckinWeight(saved, bodyWeight)
+      await syncCheckinWeight(saved, current ? current.body_weight : undefined)
       await Promise.all(
         trainerIds.map((id) =>
           createNotification(id, 'checkin_submitted', 'Weekly check-in', `${profile.full_name} ${current ? 'updated' : 'sent'} their weekly check-in.`, { client_id: profile.id, checkin_id: saved.id }),
