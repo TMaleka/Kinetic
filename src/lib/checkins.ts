@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { addDays, toLocalISO } from './queries'
+import { addDays, toLocalISO, todayISO } from './queries'
 
 export type WeeklyCheckin = {
   id: string
@@ -14,6 +14,7 @@ export type WeeklyCheckin = {
   wins: string | null
   struggles: string | null
   body_weight: number | null
+  measurement_id?: string | null
   trainer_reply: string | null
   replied_at: string | null
   created_at: string
@@ -90,4 +91,34 @@ export async function replyToCheckin(checkinId: string, reply: string) {
 export function formatWeek(weekStart: string): string {
   const [y, m, d] = weekStart.split('-').map(Number)
   return `Week of ${new Date(y, m - 1, d).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}`
+}
+
+/**
+ * Mirrors the check-in weight into a single measurement row (linked via measurement_id)
+ * so adding, correcting or removing it updates the progress charts.
+ */
+export async function syncCheckinWeight(checkin: WeeklyCheckin, weight: number | null) {
+  if (!('measurement_id' in checkin)) {
+    // Migration 012 not applied yet: keep the old behaviour of logging new weights once.
+    if (weight != null) await supabase.from('measurements').insert({ client_id: checkin.client_id, body_weight: weight, logged_at: todayISO(), notes: 'From weekly check-in' })
+    return
+  }
+  if (checkin.measurement_id) {
+    if (weight == null) {
+      await supabase.from('weekly_checkins').update({ measurement_id: null }).eq('id', checkin.id)
+      await supabase.from('measurements').delete().eq('id', checkin.measurement_id)
+    } else {
+      const { error } = await supabase.from('measurements').update({ body_weight: weight }).eq('id', checkin.measurement_id)
+      if (error) throw error
+    }
+    return
+  }
+  if (weight == null) return
+  const { data, error } = await supabase
+    .from('measurements')
+    .insert({ client_id: checkin.client_id, body_weight: weight, logged_at: todayISO(), notes: 'From weekly check-in' })
+    .select('id')
+    .single()
+  if (error) throw error
+  await supabase.from('weekly_checkins').update({ measurement_id: data.id }).eq('id', checkin.id)
 }

@@ -127,14 +127,14 @@ export function ClientDashboard() {
       }
 
       // Goals and trainer connection
-      const { data: linkGoals } = await supabase
+      const { data: activeLinks } = await supabase
         .from('trainer_client_links')
         .select('goals, trainer_id')
         .eq('client_id', profile.id)
         .eq('status', 'active')
-        .maybeSingle()
-      setGoal(linkGoals?.goals || null)
-      setHasTrainer(!!linkGoals?.trainer_id)
+        .order('started_at', { ascending: true })
+      setGoal(activeLinks?.find((l) => l.goals)?.goals || null)
+      setHasTrainer(!!activeLinks?.length)
 
       // Weekly check-in for this week (undefined = feature not available yet)
       const weekStart = weekStartISO()

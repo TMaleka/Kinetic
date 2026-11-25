@@ -4,9 +4,9 @@ import { ClipboardCheck, MessageCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Spinner, Hint } from '../../components/ui'
-import { addActivityEvent, todayISO } from '../../lib/queries'
+import { addActivityEvent } from '../../lib/queries'
 import { createNotification } from '../../lib/notifications'
-import { CHECKIN_QUESTIONS, fetchCheckins, formatWeek, saveCheckin, scoreTone, weekStartISO, type CheckinScores, type WeeklyCheckin } from '../../lib/checkins'
+import { CHECKIN_QUESTIONS, fetchCheckins, formatWeek, saveCheckin, scoreTone, syncCheckinWeight, weekStartISO, type CheckinScores, type WeeklyCheckin } from '../../lib/checkins'
 
 const TONE = { good: 'bg-[#d6f0e3] text-[#075a38]', ok: 'bg-[#e0f3fc] text-[#1787c4]', bad: 'bg-[#fde3e6] text-[#f3263a]' }
 
@@ -28,7 +28,7 @@ export function ClientCheckin() {
   const weekStart = weekStartISO()
   const [loading, setLoading] = useState(true)
   const [available, setAvailable] = useState(true)
-  const [trainerId, setTrainerId] = useState<string | null>(null)
+  const [trainerIds, setTrainerIds] = useState<string[]>([])
   const [history, setHistory] = useState<WeeklyCheckin[]>([])
   const [scores, setScores] = useState<Partial<CheckinScores>>({})
   const [wins, setWins] = useState('')
@@ -41,20 +41,21 @@ export function ClientCheckin() {
     if (!profile) return
     ;(async () => {
       try {
-        const { data: link } = await supabase
+        const { data: links } = await supabase
           .from('trainer_client_links')
           .select('trainer_id')
           .eq('client_id', profile.id)
           .eq('status', 'active')
-          .maybeSingle()
-        setTrainerId(link?.trainer_id ?? null)
+          .order('started_at', { ascending: true })
+        setTrainerIds((links || []).map((l) => l.trainer_id))
         const rows = await fetchCheckins([profile.id], 12)
         if (rows === null) setAvailable(false)
         else {
           setHistory(rows)
           const current = rows.find((r) => r.week_start === weekStart)
           if (current) {
-            setScores(current)
+            const { training, energy, sleep, stress, soreness } = current
+            setScores({ training, energy, sleep, stress, soreness })
             setWins(current.wins || '')
             setStruggles(current.struggles || '')
             setWeight(current.body_weight != null ? String(current.body_weight) : '')
@@ -78,23 +79,28 @@ export function ClientCheckin() {
     if (!complete) return
     setSaving(true)
     try {
-      const bodyWeight = weight.trim() ? parseFloat(weight) : null
+      const parsed = weight.trim() ? parseFloat(weight) : null
+      const bodyWeight = parsed != null && !Number.isNaN(parsed) ? parsed : null
       const saved = await saveCheckin({
         client_id: profile.id,
-        trainer_id: trainerId,
+        trainer_id: trainerIds[0] ?? null,
         week_start: weekStart,
-        ...(scores as CheckinScores),
+        training: scores.training!,
+        energy: scores.energy!,
+        sleep: scores.sleep!,
+        stress: scores.stress!,
+        soreness: scores.soreness!,
         wins,
         struggles,
-        body_weight: bodyWeight != null && !Number.isNaN(bodyWeight) ? bodyWeight : null,
+        body_weight: bodyWeight,
       })
-      if (!current && bodyWeight && !Number.isNaN(bodyWeight)) {
-        await supabase.from('measurements').insert({ client_id: profile.id, body_weight: bodyWeight, logged_at: todayISO(), notes: 'From weekly check-in' })
-      }
-      if (trainerId) {
-        await createNotification(trainerId, 'checkin_submitted', 'Weekly check-in', `${profile.full_name} ${current ? 'updated' : 'sent'} their weekly check-in.`, { client_id: profile.id, checkin_id: saved.id })
-      }
-      if (!current) await addActivityEvent(profile.id, trainerId, 'checkin_submitted', 'Weekly check-in submitted')
+      await syncCheckinWeight(saved, bodyWeight)
+      await Promise.all(
+        trainerIds.map((id) =>
+          createNotification(id, 'checkin_submitted', 'Weekly check-in', `${profile.full_name} ${current ? 'updated' : 'sent'} their weekly check-in.`, { client_id: profile.id, checkin_id: saved.id }),
+        ),
+      )
+      if (!current) await addActivityEvent(profile.id, trainerIds[0] ?? null, 'checkin_submitted', 'Weekly check-in submitted')
       navigate('/app', { replace: true })
     } catch (err: any) {
       console.error(err)
@@ -118,7 +124,7 @@ export function ClientCheckin() {
         </Hint>
       ) : (
         <>
-          {!trainerId && (
+          {trainerIds.length === 0 && (
             <Hint title="No trainer yet" icon={<ClipboardCheck className="size-5" />} action={<Link to="/app/profile" className="btn-secondary">Go to Profile</Link>}>
               You can still check in. Once you accept your trainer's invitation, they'll see your check-ins.
             </Hint>
